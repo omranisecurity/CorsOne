@@ -32,7 +32,7 @@ CorsOne requires Python v3 to install successfully.
 git clone https://github.com/omranisecurity/CorsOne.git
 cd CorsOne
 python3 -m pip install -r requirements.txt or pip install -r requirements.txt
-python3 CorsOne.py
+python3 corsone.py
 ```
 
 # Usage
