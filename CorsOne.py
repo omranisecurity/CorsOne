@@ -134,9 +134,9 @@ def version():
 def main():
     parser = argparse.ArgumentParser(prog='CorsOne', description='Check CORS vulnerability', epilog='Verion: 1.0.0')
     parser.add_argument('-u', '--url', type=str, help="URL to find Vulnerability")
-    parser.add_argument('-ch', '--custom-headers', type=str, help='custom header to include in all http request in header:value format. -ch "Accept-Language: en-US,en;q=0.5\nAccept-Encoding: gzip, deflate, br"')
-    parser.add_argument('-p', '--proxy', type=str, help='Specify a proxy to use during the scan. -p "http://ip:port/"')
-    parser.add_argument('-s', '--silent', action='store_true', help='show only Result in output')
+    parser.add_argument('-ch', '--custom-headers', type=str, help='custom header to include in all http request in header:value format. -ch "header1: value1\nheader2: value2"')
+    parser.add_argument('-p', '--proxy', type=str, help='specify a proxy to use during the scan. -p "http://ip:port/"')
+    parser.add_argument('-s', '--silent', action='store_true', help='show only Result in output)
     parser.add_argument('-v', '--version', action='store_true', help='show version of CorsOne')
     parser.add_argument('-nc', '--no-color', action='store_false', help='disable color in output')
     parser.add_argument('-o', '--output', help="file to write output to")
