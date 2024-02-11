@@ -129,7 +129,7 @@ def validation(url):
     return validators.url(url)
 
 def version():
-    return "v1.0.0"
+    return "v0.9.0"
 
 def main():
     parser = argparse.ArgumentParser(prog='CorsOne', description='Check CORS vulnerability', epilog='Verion: 1.0.0')
