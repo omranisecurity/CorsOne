@@ -177,5 +177,5 @@ def main():
     else:
         print("no input list provided. please provide either a URL or input via stdin.")
 
-if name == "main":
+if __name__ == "__main__":
     main()
