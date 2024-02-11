@@ -38,6 +38,11 @@ def Scan(url, custom_headers=None, proxy=None, output=None, silent=None, no_colo
         if proxy:
             if proxy.startswith("http://") or proxy.startswith("https://"):
                 proxies = {'http': proxy,'https': proxy}
+                
+            elif os.path.exists(proxy):
+                with open(proxy, "r") as file:
+                    proxy = file.readline().strip()
+                    proxies = {'http': proxy,'https': proxy}
             else:
                 print ("Enter the correct value of the proxy flag.")
                 sys.exit(1)
@@ -118,6 +123,7 @@ def Scan(url, custom_headers=None, proxy=None, output=None, silent=None, no_colo
 
     except KeyboardInterrupt:
         print('You have pressed the ctrl + c button.')
+        sys.exit(1)
 
 def validation(url):
     return validators.url(url)
@@ -134,7 +140,6 @@ def main():
     parser.add_argument('-v', '--version', action='store_true', help='show version of CorsOne')
     parser.add_argument('-nc', '--no-color', action='store_false', help='disable color in output')
     parser.add_argument('-o', '--output', help="file to write output to")
-
     args = parser.parse_args()
 
     url = args.url
@@ -144,24 +149,21 @@ def main():
     version_info = args.version
     no_color = args.no_color
     output = args.output
-    
     stdin = not sys.stdin.isatty()
-
-    #input from the -u flag
+    
     if url and not stdin:
         if validation(url):
             Scan(url, custom_headers, proxy, output, silent, no_color)
-        else:
-            print("The URL isn't Valid!")
-            sys.exit(1)
-
-    #input from the -u flag
+        elif not validation(url):
+                print("The URL isn't Valid!")
+                sys.exit(1)
+            
     elif stdin and not url:
         for stdin_data in sys.stdin:
             stdin_data = stdin_data.strip()
             if validation(stdin_data):
                 Scan(stdin_data, custom_headers, proxy, output, silent, no_color)
-            else:
+            elif not validation(stdin_data):
                 print("The URL isn't Valid!")
                 sys.exit(1)
 
@@ -175,5 +177,5 @@ def main():
     else:
         print("no input list provided. please provide either a URL or input via stdin.")
 
-if __name__ == "__main__":
+if name == "main":
     main()
