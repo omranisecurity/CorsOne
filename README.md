@@ -51,8 +51,8 @@ INPUT:
   -u, --url                  URL to find Vulnerability
 
 Config:
-  -ch, --custom-headers      custom header to include in all http request in header:value format
-  -p,  --proxy               specify a proxy to use during the scan
+  -ch, --custom-headers      custom header to include in all http request in header:value format. -ch "header1: value1\nheader2: value2"
+  -p,  --proxy               specify a proxy to use during the scan. -p "http://ip:port/"
 
 OUTPUT:
   -o, --output string        file to write output to
