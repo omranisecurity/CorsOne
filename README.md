@@ -67,22 +67,22 @@ DEBUG:
 
 * To check CORS misconfigurations of specific domain:
 
-``python3 corsone.py -u https://example.com/``
+``python3 CorsOne.py -u https://example.com/``
 
 * Check CORS misconfiguration for a list of URLs from a file:
 
-``cat urls.txt | python3 corsone.py``
+``cat urls.txt | python3 CorsOne.py``
 
 * To check CORS misconfiguration with specific headers:
 
-``python3 corsone.py -u https://example.com/ -ch "Accept-Language: en-US,en;q=0.5\nAccept-Encoding: gzip, deflate, br"``
+``python3 CorsOne.py -u https://example.com/ -ch "Accept-Language: en-US,en;q=0.5\nAccept-Encoding: gzip, deflate, br"``
 
 * Check CORS misconfiguration with a specific proxy:
 
-``python3 corsone.py -u https://example.com/ -p "http://ip:port/"``
+``python3 CorsOne.py -u https://example.com/ -p "http://ip:port/"``
 
 * Save scan results to a file using -o:
 
-``python3 corsone.py -u https://example.com/ -o output_filename.txt``
+``python3 CorsOne.py -u https://example.com/ -o output_filename.txt``
 
 
