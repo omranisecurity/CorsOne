@@ -6,7 +6,6 @@ CorsOne
 
 <p align="center">
 <a href="https://github.com/omranisecurity/CorsOne/issues"><img src="https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat"></a>
-<a href="https://github.com/omranisecurity/CorsOne/releases/tag/0.9.0"><img src="https://img.shields.io/github/release/CorsOne"></a>
 <a href="https://github.com/omranisecurity/CorsOne/releases"><img src="https://img.shields.io/github/release/omranisecurity/CorsOne"></a>
 <a href="https://twitter.com/omranisecurity"><img src="https://img.shields.io/twitter/follow/omranisecurity?logo=twitter"></a>
 </p>
