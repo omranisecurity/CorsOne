@@ -37,7 +37,7 @@ python3 corsone.py
 
 # Usage
 ```python
-python3 corsplus.py [-h] [-u URL] [-ch cookie/header] [-o OUTPUT]
+python3 CorsOne.py [-h] [-u URL] [-ch cookie/header] [-o OUTPUT]
 ```
 
 This will display help for the tool. Here are all the switches it supports.
