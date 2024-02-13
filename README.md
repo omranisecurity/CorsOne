@@ -2,7 +2,7 @@
 CorsOne
 </h1>
 
-<h4 align="center">Fast Cors Misconfiguration Discovery Tool.</h4>
+<h4 align="center">Fast CORS Misconfiguration Discovery Tool.</h4>
 
 <p align="center">
 <a href="https://github.com/omranisecurity/CorsOne/issues"><img src="https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat"></a>
@@ -19,10 +19,10 @@ CorsOne
 
 ---
 
-`CorsOne` is a tool designed to quickly and easily detect Cors misconfiguration, compensating for the shortcomings of other tools and providing automatic testing for all relevant cases.
+`CorsOne` is a tool designed to quickly and easily detect CORS misconfiguration, compensating for the shortcomings of other tools and providing automatic testing for all relevant cases.
 
 # Features
-- Accurate and fast diagnosis of Cors Misconfiguration vulnerability
+- Accurate and fast diagnosis of CORS Misconfiguration vulnerability
 - **STDIN** support enables easy integration with other tools or your own methodology
 
 # Install
