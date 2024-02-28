@@ -132,7 +132,7 @@ def version():
     return "v0.9.0"
 
 def main():
-    parser = argparse.ArgumentParser(prog='CorsOne', description='Check CORS vulnerability', epilog='Verion: 1.0.0')
+    parser = argparse.ArgumentParser(prog='CorsOne', description='Check CORS vulnerability', epilog='Verion: 0.9.0')
     parser.add_argument('-u', '--url', type=str, help="URL to find Vulnerability")
     parser.add_argument('-ch', '--custom-headers', type=str, help='custom header to include in all http request in header:value format. -ch "header1: value1\nheader2: value2"')
     parser.add_argument('-p', '--proxy', type=str, help='specify a proxy to use during the scan. -p "http://ip:port/"')
