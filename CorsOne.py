@@ -35,18 +35,6 @@ def Scan(url, custom_headers=None, proxy=None, output=None, silent=None, no_colo
         URLParsing = urlparse(url)
         origin = URLParsing.netloc
         
-        if proxy:
-            if proxy.startswith("http://") or proxy.startswith("https://"):
-                proxies = {'http': proxy,'https': proxy}
-                
-            elif os.path.exists(proxy):
-                with open(proxy, "r") as file:
-                    proxy = file.readline().strip()
-                    proxies = {'http': proxy,'https': proxy}
-            else:
-                print ("Enter the correct value of the proxy flag.")
-                sys.exit(1)
-        
         vulnerable_urls = []
 
         bypass_dict = {
@@ -79,27 +67,28 @@ def Scan(url, custom_headers=None, proxy=None, output=None, silent=None, no_colo
             'Advance Regexp bypass 22': origin + '%.attacker.com',
         }
         
-        for x, y in bypass_dict.items():    
-            RequestHeader = {
+        RequestHeader = {
                 'user-agent':'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:122.0) Gecko/20100101 Firefox/122.0',
-                'accept':'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
-                'Origin': y
+                'accept':'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8'
                 }
 
-            if custom_headers:
+        if custom_headers:
                 for header_line in custom_headers.replace('\\n', '\n').splitlines():
                     header_name, header_value = map(str.strip, header_line.split(':', 1))
                     RequestHeader[header_name] = header_value
-
+        if proxy:
+                proxies = proxy_check(proxy)
+                
+        for x, y in bypass_dict.items():
+            RequestHeader['origin'] = y
             if proxy:
                 try:
                     response = requests.post(url, headers=RequestHeader, proxies=proxies)
-                    response.raise_for_status()
                 except requests.exceptions.RequestException as e:
                     print(f"Request error: {e}")
                     sys.exit(1)
             else:
-                response = requests.post(url, headers=RequestHeader)
+                response = requests.get(url, headers=RequestHeader)
 
             ACAC = bool(response.headers.get('Access-Control-Allow-Credentials'))
             ACAO = str(response.headers.get('Access-Control-Allow-Origin'))
@@ -125,6 +114,39 @@ def Scan(url, custom_headers=None, proxy=None, output=None, silent=None, no_colo
         print('You have pressed the ctrl + c button.')
         sys.exit(1)
 
+def proxy_check(proxy):
+    working_proxies = []
+    if proxy.startswith("http://") or proxy.startswith("https://") or proxy.startswith("socks4://") or proxy.startswith("socks5://"):
+        proxies = {'http': proxy,'https': proxy}
+        try:
+            response = requests.get("https://api.github.com/", proxies=proxies)
+            if response and response.ok:
+                working_proxies.append(proxies)
+        except requests.exceptions.RequestException as e:
+            print(f"Request error: {e}")
+            sys.exit(1)
+
+    elif os.path.exists(proxy):
+        with open(proxy, "r") as file:
+            proxy_list = file.read().splitlines()
+            for proxy in proxy_list:
+                proxies = {'http': proxy,'https': proxy}
+                try:
+                    response = requests.get("https://api.github.com/", proxies=proxies, timeout=5)
+                    if response.ok:
+                        working_proxies.append(proxies)
+                        break
+                except requests.exceptions.RequestException:
+                    # pass
+                    print(proxy)
+
+    if working_proxies:
+        return working_proxies[0]
+
+    else:
+        print("None of the proxies are working. Please provide valid proxies.")
+        sys.exit(1)
+
 def validation(url):
     return validators.url(url)
 
@@ -135,7 +157,7 @@ def main():
     parser = argparse.ArgumentParser(prog='CorsOne', description='Check CORS vulnerability', epilog='Verion: 0.9.0')
     parser.add_argument('-u', '--url', type=str, help="URL to find Vulnerability")
     parser.add_argument('-ch', '--custom-headers', type=str, help='custom header to include in all http request in header:value format. -ch "header1: value1\nheader2: value2"')
-    parser.add_argument('-p', '--proxy', type=str, help='specify a proxy to use during the scan. -p "http://ip:port/"')
+    parser.add_argument('-p', '--proxy', type=str, help='specify a proxy to use during the scan. -p "protocol://ip:port/" or "proxylist.txt"')
     parser.add_argument('-s', '--silent', action='store_true', help='show only Result in output')
     parser.add_argument('-v', '--version', action='store_true', help='show version of CorsOne')
     parser.add_argument('-nc', '--no-color', action='store_false', help='disable color in output')
