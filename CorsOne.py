@@ -9,6 +9,7 @@ import validators
 import sys
 import os
 from colorama import Fore
+from time import sleep
 
 def banner():
     print("""
@@ -26,16 +27,13 @@ def banner():
                        LinkedIn/X: @omranisecurity
           """)
 
-def Scan(url, custom_headers=None, proxy=None, output=None, silent=None, no_color=None):
+def Scan(url, custom_headers=None, proxy=None, output=None, silent=None, no_color=None, rate_limit=None):
     try:
-        if not silent:
-            banner()
-            
         url = str(unquote(url, encoding='utf-8'))
         URLParsing = urlparse(url)
         origin = URLParsing.netloc
         
-        vulnerable_urls = []
+        Endpoints = []
 
         bypass_dict = {
             'Reflected Origin': 'attacker.com',
@@ -95,20 +93,24 @@ def Scan(url, custom_headers=None, proxy=None, output=None, silent=None, no_colo
 
             if ACAC and ACAO == y:
                 status = '[Vulnerable]'
-                vulnerable_urls.append(f"{url} {status} {x}: {y}") 
+                Endpoints.append(f"{url} {status} {x}: {y}")
             else:
                 status = '[Not Vulnerable]'
+                Endpoints.append(f"{url} {status} {x}: {y}")
 
             if no_color:
                 print(f"{Fore.GREEN if status == '[Vulnerable]' else Fore.RED}{status} {x}: {Fore.RESET}{y}")
             else:
                 print(f"{status} {x}: {y}")
 
-            if output and len(vulnerable_urls) > 0:
-                file = open(output, "w")
-                for item in vulnerable_urls:
-                    file.write(item+"\n")
-                file.close()
+            if rate_limit:
+                sleep(rate_limit)
+
+        if output:
+            file = open(output, "a")
+            for item in Endpoints:
+                file.write(item+"\n")
+            file.close()
 
     except KeyboardInterrupt:
         print('You have pressed the ctrl + c button.')
@@ -137,9 +139,8 @@ def proxy_check(proxy):
                         working_proxies.append(proxies)
                         break
                 except requests.exceptions.RequestException:
-                    # pass
-                    print(proxy)
-
+                    pass
+                    
     if working_proxies:
         return working_proxies[0]
 
@@ -148,56 +149,79 @@ def proxy_check(proxy):
         sys.exit(1)
 
 def validation(url):
-    return validators.url(url)
+    if validators.url(url):
+        return True
+    else:
+        return False
 
 def version():
     return "v0.9.0"
 
 def main():
+    banner_printed = False
     parser = argparse.ArgumentParser(prog='CorsOne', description='Check CORS vulnerability', epilog='Verion: 0.9.0')
-    parser.add_argument('-u', '--url', type=str, help="URL to find Vulnerability")
+    parser.add_argument('-u', '--url', type=str, help="input target url to probe")
+    parser.add_argument('-l', '--list', help="input file list of URLs")
     parser.add_argument('-ch', '--custom-headers', type=str, help='custom header to include in all http request in header:value format. -ch "header1: value1\nheader2: value2"')
-    parser.add_argument('-p', '--proxy', type=str, help='specify a proxy to use during the scan. -p "protocol://ip:port/" or "proxylist.txt"')
-    parser.add_argument('-s', '--silent', action='store_true', help='show only Result in output')
+    parser.add_argument('-rl', '--rate-limit', type=int, help='maximum requests to send per second')
+    parser.add_argument('-p', '--proxy', type=str, help='SOCKS and HTTP Proxy to use (eg -p "http://127.0.0.1:8080" or -p "proxylist.txt")')
+    parser.add_argument('-s', '--silent', action='store_true', help='show only result in output')
     parser.add_argument('-v', '--version', action='store_true', help='show version of CorsOne')
     parser.add_argument('-nc', '--no-color', action='store_false', help='disable color in output')
     parser.add_argument('-o', '--output', help="file to write output to")
     args = parser.parse_args()
 
     url = args.url
+    list = args.list
     custom_headers = args.custom_headers
     proxy = args.proxy
+    rate_limit = args.rate_limit
     silent = args.silent
     version_info = args.version
     no_color = args.no_color
     output = args.output
     stdin = not sys.stdin.isatty()
     
-    if url and not stdin:
-        if validation(url):
-            Scan(url, custom_headers, proxy, output, silent, no_color)
-        elif not validation(url):
-                print("The URL isn't Valid!")
-                sys.exit(1)
-            
-    elif stdin and not url:
-        for stdin_data in sys.stdin:
-            stdin_data = stdin_data.strip()
-            if validation(stdin_data):
-                Scan(stdin_data, custom_headers, proxy, output, silent, no_color)
-            elif not validation(stdin_data):
-                print("The URL isn't Valid!")
-                sys.exit(1)
-
-    elif version_info:
-        print(version())
-
-    elif stdin and url:
+    if url and (stdin or list) or stdin and (url or list):
         print("Error: You cannot provide both stdin input and use the -u flag simultaneously.")
         sys.exit(1)
 
-    else:
-        print("no input list provided. please provide either a URL or input via stdin.")
+    elif url:
+        if not banner_printed and not silent:
+            banner()
+            banner_printed = True
+        if validation(url):
+            Scan(url, custom_headers, proxy, output, silent, no_color, rate_limit)
+        elif not validation(url):
+            print(f"Error: The provided URL '{url}' is not valid. Please enter a valid URL.")
+            sys.exit(1)
+
+    elif list:
+        if os.path.exists(list):
+            with open(list, "r") as file:
+                URLs_list = file.read().splitlines()
+                if not banner_printed and not silent:
+                    banner()
+                    banner_printed = True
+                    for item in URLs_list:
+                        if validation(item):
+                            Scan(item, custom_headers, proxy, output, silent, no_color, rate_limit)
+                        elif not validation(item):
+                            print(f"Error: The provided URL '{item}' is not valid. Please enter a valid URL.")
+
+    elif stdin:
+        for stdin_data in sys.stdin:
+            stdin_data = stdin_data.strip()
+            if not banner_printed and not silent:
+                banner()
+                banner_printed = True
+            if validation(stdin_data):
+                Scan(stdin_data, custom_headers, proxy, output, silent, no_color, rate_limit)
+            elif not validation(stdin_data):
+                print(f"Error: The provided URL '{stdin_data}' is not valid. Please enter a valid URL.")
+
+    elif version_info:
+        print(version())
 
 if __name__ == "__main__":
     main()
