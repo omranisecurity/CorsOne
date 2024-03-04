@@ -73,7 +73,9 @@ DEBUG:
 * To check CORS misconfigurations for a list of domains:
 
 ``cat urls.txt | python3 CorsOne.py``
+
 or
+
 ``python3 CorsOne.py -l list.txt``
 
 * Check CORS misconfigurations with custom headers:
