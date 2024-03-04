@@ -108,4 +108,7 @@ or
 
 ``python3 CorsOne.py -u https://example.com/ -o output_filename.txt``
 
+---
 
+# Acknowledgment
+- Thanks to <a href="https://book.hacktricks.xyz/pentesting-web/cors-bypass">hacktricks.xyz</a> for sharing the resources.
