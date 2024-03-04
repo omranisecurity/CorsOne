@@ -134,7 +134,7 @@ def proxy_check(proxy):
             for proxy in proxy_list:
                 proxies = {'http': proxy,'https': proxy}
                 try:
-                    response = requests.post("https://api.github.com/", proxies=proxies, timeout=5)
+                    response = requests.get("https://api.github.com/", proxies=proxies, timeout=5)
                     if response.ok:
                         working_proxies.append(proxies)
                         break
@@ -144,7 +144,7 @@ def proxy_check(proxy):
     elif protocol in allowed_protocols and (len(ip.split('.')) == 4) and (len(ip_port_part.split(':')) == 2) and (1 <= int(port) <= 65535):
         proxies = {'http': proxy,'https': proxy}
         try:
-            response = requests.post("https://api.github.com/", proxies=proxies)
+            response = requests.get("https://api.github.com/", proxies=proxies)
             if response and response.ok:
                 working_proxies.append(proxies)
         except requests.exceptions.RequestException as e:
@@ -152,7 +152,7 @@ def proxy_check(proxy):
             sys.exit(1)
     else:
         print("Error: The provided proxy is not valid. Please enter a valid proxy.")
-            
+
     if working_proxies:
         return working_proxies[0]
 
