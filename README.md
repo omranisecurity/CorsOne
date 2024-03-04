@@ -91,9 +91,15 @@ or
 * Check CORS misconfigurations using a proxy:
 
 ``python3 CorsOne.py -u https://example.com/ -p "https://ip:port/"``
+
 or
+
 ``python3 CorsOne.py -u https://example.com/ -p "socks4://ip:port/"``
+
 ``python3 CorsOne.py -u https://example.com/ -p "socks5://ip:port/"``
+
+* Check CORS misconfigurations using a proxy list:
+
 ``python3 CorsOne.py -u https://example.com/ -p proxylist.txt``
 
 * Save scan results to a file using -o:
