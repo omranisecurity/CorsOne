@@ -27,12 +27,17 @@ def banner():
                        LinkedIn/X: @omranisecurity
           """)
 
-def Scan(url, custom_headers=None, proxy=None, output=None, silent=None, no_color=None, rate_limit=None):
+def Scan(url, custom_headers=None, proxy=None, output=None, silent=None, no_color=None, rate_limit=None, method=None):
     try:
         url = str(unquote(url, encoding='utf-8'))
         URLParsing = urlparse(url)
         origin = URLParsing.netloc
         
+        if method:
+            pass
+        else:
+            method = "get"
+
         Endpoints = []
 
         bypass_dict = {
@@ -81,12 +86,12 @@ def Scan(url, custom_headers=None, proxy=None, output=None, silent=None, no_colo
             RequestHeader['origin'] = y
             if proxy:
                 try:
-                    response = requests.post(url, headers=RequestHeader, proxies=proxies)
+                    response = requests.request(method, url, headers=RequestHeader, proxies=proxies)
                 except requests.exceptions.RequestException as e:
                     print(f"Request error: {e}")
                     sys.exit(1)
             else:
-                response = requests.get(url, headers=RequestHeader)
+                response = requests.request(method, url, headers=RequestHeader)
 
             ACAC = bool(response.headers.get('Access-Control-Allow-Credentials'))
             ACAO = str(response.headers.get('Access-Control-Allow-Origin'))
@@ -114,33 +119,40 @@ def Scan(url, custom_headers=None, proxy=None, output=None, silent=None, no_colo
 
     except KeyboardInterrupt:
         print('You have pressed the ctrl + c button.')
-        sys.exit(1)
+        sys.exit(0)
 
 def proxy_check(proxy):
     working_proxies = []
-    if proxy.startswith("http://") or proxy.startswith("https://") or proxy.startswith("socks4://") or proxy.startswith("socks5://"):
-        proxies = {'http': proxy,'https': proxy}
-        try:
-            response = requests.get("https://api.github.com/", proxies=proxies)
-            if response and response.ok:
-                working_proxies.append(proxies)
-        except requests.exceptions.RequestException as e:
-            print(f"Request error: {e}")
-            sys.exit(1)
+    allowed_protocols = ['http', 'https', 'socks4', 'socks5']
+    protocol, rest = proxy.split('://', 1)
+    ip_port_part = rest.split('/', 1)[0]
+    ip, port = ip_port_part.split(':')
 
-    elif os.path.exists(proxy):
+    if os.path.exists(proxy):
         with open(proxy, "r") as file:
             proxy_list = file.read().splitlines()
             for proxy in proxy_list:
                 proxies = {'http': proxy,'https': proxy}
                 try:
-                    response = requests.get("https://api.github.com/", proxies=proxies, timeout=5)
+                    response = requests.post("https://api.github.com/", proxies=proxies, timeout=5)
                     if response.ok:
                         working_proxies.append(proxies)
                         break
                 except requests.exceptions.RequestException:
                     pass
-                    
+
+    elif protocol in allowed_protocols and (len(ip.split('.')) == 4) and (len(ip_port_part.split(':')) == 2) and (1 <= int(port) <= 65535):
+        proxies = {'http': proxy,'https': proxy}
+        try:
+            response = requests.post("https://api.github.com/", proxies=proxies)
+            if response and response.ok:
+                working_proxies.append(proxies)
+        except requests.exceptions.RequestException as e:
+            print(f"Request error: {e}")
+            sys.exit(1)
+    else:
+        print("Error: The provided proxy is not valid. Please enter a valid proxy.")
+            
     if working_proxies:
         return working_proxies[0]
 
@@ -150,7 +162,12 @@ def proxy_check(proxy):
 
 def validation(url):
     if validators.url(url):
-        return True
+        return url
+    
+    elif validators.domain(url):
+        url = f'https://{url}'
+        return url
+
     else:
         return False
 
@@ -164,6 +181,7 @@ def main():
     parser.add_argument('-l', '--list', help="input file list of URLs")
     parser.add_argument('-ch', '--custom-headers', type=str, help='custom header to include in all http request in header:value format. -ch "header1: value1\nheader2: value2"')
     parser.add_argument('-rl', '--rate-limit', type=int, help='maximum requests to send per second')
+    parser.add_argument('-m', '--method', type=str, choices=['GET', 'POST'], help='HTTP method for the request (choose from: GET, POST)')
     parser.add_argument('-p', '--proxy', type=str, help='SOCKS and HTTP Proxy to use (eg -p "http://127.0.0.1:8080" or -p "proxylist.txt")')
     parser.add_argument('-s', '--silent', action='store_true', help='show only result in output')
     parser.add_argument('-v', '--version', action='store_true', help='show version of CorsOne')
@@ -176,6 +194,7 @@ def main():
     custom_headers = args.custom_headers
     proxy = args.proxy
     rate_limit = args.rate_limit
+    method = args.method
     silent = args.silent
     version_info = args.version
     no_color = args.no_color
@@ -190,9 +209,11 @@ def main():
         if not banner_printed and not silent:
             banner()
             banner_printed = True
-        if validation(url):
-            Scan(url, custom_headers, proxy, output, silent, no_color, rate_limit)
+        url = validation(url)
+        if url:
+            Scan(url, custom_headers, proxy, output, silent, no_color, rate_limit, method)
         elif not validation(url):
+            print("not")
             print(f"Error: The provided URL '{url}' is not valid. Please enter a valid URL.")
             sys.exit(1)
 
@@ -203,25 +224,36 @@ def main():
                 if not banner_printed and not silent:
                     banner()
                     banner_printed = True
-                    for item in URLs_list:
-                        if validation(item):
-                            Scan(item, custom_headers, proxy, output, silent, no_color, rate_limit)
-                        elif not validation(item):
-                            print(f"Error: The provided URL '{item}' is not valid. Please enter a valid URL.")
+                for item in URLs_list:
+                    item = validation(item)
+                    if item:
+                        Scan(item, custom_headers, proxy, output, silent, no_color, rate_limit, method)
+                    elif not validation(item):
+                        print(f"Error: The provided URL '{item}' is not valid. Please enter a valid URL.")
+        elif not os.path.exists(list):
+            print(f"Error: The file '{list}' does not exist. Please provide a valid file.")
+            sys.exit(0)
 
     elif stdin:
         for stdin_data in sys.stdin:
             stdin_data = stdin_data.strip()
-            if not banner_printed and not silent:
-                banner()
-                banner_printed = True
-            if validation(stdin_data):
-                Scan(stdin_data, custom_headers, proxy, output, silent, no_color, rate_limit)
-            elif not validation(stdin_data):
-                print(f"Error: The provided URL '{stdin_data}' is not valid. Please enter a valid URL.")
+            if stdin_data:
+                if not banner_printed and not silent:
+                    banner()
+                    banner_printed = True
+                stdin_data = validation(stdin_data)
+                if stdin_data:
+                    Scan(stdin_data, custom_headers, proxy, output, silent, no_color, rate_limit, method)
+                elif not validation(stdin_data):
+                    print(f"Error: The provided URL '{stdin_data}' is not valid. Please enter a valid URL.")
+            else:
+                print("Error: The file is empty.")
 
     elif version_info:
         print(version())
 
+    # else:
+    #     print()
+        
 if __name__ == "__main__":
     main()
