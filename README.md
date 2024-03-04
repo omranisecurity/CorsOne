@@ -35,7 +35,7 @@ python3 -m pip install -r requirements.txt
 
 # Usage
 ```python
-python3 CorsOne.py [-h] [-u URL] [-ch cookie/header] [-o OUTPUT]
+python3 CorsOne [-h] [-u URL] [-l LIST] [-ch CUSTOM_HEADERS] [-rl RATE_LIMIT] [-m {GET,POST}] [-p PROXY] [-s] [-v] [-nc] [-o OUTPUT]
 ```
 
 This will display help for the tool. Here are all the switches it supports.
@@ -47,38 +47,54 @@ Usage:
 
 Flags:
 INPUT:
-  -u, --url                  URL to find Vulnerability
-
+  -u, --url                  input target url to probe
+  -l, --list                 input file list of URLs
 Config:
   -ch, --custom-headers      custom header to include in all http request in header:value format. -ch "header1: value1\nheader2: value2"
-  -p,  --proxy               specify a proxy to use during the scan. -p "http://ip:port/"
+  -rl,  --rate-limit         maximum requests to send per second
+  -m, --method               HTTP method for the request
+  -p,  --proxy               SOCKS and HTTP Proxy to use (eg -p "http://127.0.0.1:8080" or -p "proxylist.txt")
 
 OUTPUT:
   -o, --output string        file to write output to
 
 DEBUG:
-  -s, --silent               show only Result in output
+  -s, --silent               show only result in output
   -v, --version              show version of CorsOne
   -nc, --no-color            disable color in output
 ```
 
 # Examples
 
-* To check CORS misconfigurations of specific domain:
+* To check CORS misconfigurations for a specific domain:
 
 ``python3 CorsOne.py -u https://example.com/``
 
-* Check CORS misconfiguration for a list of URLs from a file:
+* To check CORS misconfigurations for a list of domains:
 
 ``cat urls.txt | python3 CorsOne.py``
+or
+``python3 CorsOne.py -l list.txt``
 
-* To check CORS misconfiguration with specific headers:
+* Check CORS misconfigurations with custom headers:
 
-``python3 CorsOne.py -u https://example.com/ -ch "Accept-Language: en-US,en;q=0.5\nAccept-Encoding: gzip, deflate, br"``
+``python3 CorsOne.py -u https://example.com/ -ch "Cookie: name=value;\nAccept-Encoding: gzip, deflate, br"``
 
-* Check CORS misconfiguration with a specific proxy:
+* Check CORS misconfigurations with rate limit:
 
-``python3 CorsOne.py -u https://example.com/ -p "http://ip:port/"``
+``python3 CorsOne.py -u https://example.com/ -rl 5``
+
+* Check CORS misconfigurations with a custom HTTP method (default GET):
+
+``python3 CorsOne.py -u https://example.com/ -m POST``
+
+* Check CORS misconfigurations using a proxy:
+
+``python3 CorsOne.py -u https://example.com/ -p "https://ip:port/"``
+or
+``python3 CorsOne.py -u https://example.com/ -p "socks4://ip:port/"``
+``python3 CorsOne.py -u https://example.com/ -p "socks5://ip:port/"``
+``python3 CorsOne.py -u https://example.com/ -p proxylist.txt``
 
 * Save scan results to a file using -o:
 
