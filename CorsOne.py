@@ -172,16 +172,16 @@ def validation(url):
         return False
 
 def version():
-    return "v0.9.0"
+    return "v0.9.4"
 
 def main():
     banner_printed = False
-    parser = argparse.ArgumentParser(prog='CorsOne', description='Check CORS vulnerability', epilog='Verion: 0.9.0')
+    parser = argparse.ArgumentParser(prog='CorsOne', description='Fast CORS Misconfiguration Discovery Tool', epilog='Verion: 0.9.4')
     parser.add_argument('-u', '--url', type=str, help="input target url to probe")
     parser.add_argument('-l', '--list', help="input file list of URLs")
-    parser.add_argument('-ch', '--custom-headers', type=str, help='custom header to include in all http request in header:value format. -ch "header1: value1\nheader2: value2"')
+    parser.add_argument('-ch', '--custom-headers', type=str, help='custom header to include in all http request in header:value format. -ch "header1: value1\\nheader2: value2"')
     parser.add_argument('-rl', '--rate-limit', type=int, help='maximum requests to send per second')
-    parser.add_argument('-m', '--method', type=str, choices=['GET', 'POST'], help='HTTP method for the request (choose from: GET, POST)')
+    parser.add_argument('-m', '--method', type=str, choices=['GET', 'POST'], help='HTTP method for the request')
     parser.add_argument('-p', '--proxy', type=str, help='SOCKS and HTTP Proxy to use (eg -p "http://127.0.0.1:8080" or -p "proxylist.txt")')
     parser.add_argument('-s', '--silent', action='store_true', help='show only result in output')
     parser.add_argument('-v', '--version', action='store_true', help='show version of CorsOne')
@@ -252,8 +252,9 @@ def main():
     elif version_info:
         print(version())
 
-    # else:
-    #     print()
+    else:
+        print("CorsOne - Fast CORS Misconfiguration Discovery Tool\n\nUsage: python3 CorsOne.py [options]\n\nFor more information, use: python3 CorsOne.py -h")
+        sys.exit(0)
         
 if __name__ == "__main__":
     main()
