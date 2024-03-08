@@ -16,9 +16,9 @@ CorsOne
   <a href="#usage">Usage</a> •
   <a href="#examples">Examples</a>
 </p>
-
 ---
 
+[![CorsOne ](https://asciinema.org/a/OKANAbkXi3PGRGTAOEb5dxUA5.svg)](https://asciinema.org/a/OKANAbkXi3PGRGTAOEb5dxUA5?autoplay=1)
 `CorsOne` is a tool designed to quickly and easily detect CORS misconfiguration, compensating for the shortcomings of other tools and providing automatic testing for all relevant cases.
 
 # Features
