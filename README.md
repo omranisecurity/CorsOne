@@ -27,11 +27,29 @@ CorsOne
 - **STDIN** support enables easy integration with other tools or your own methodology
 
 # Install
-CorsOne requires Python v3 to install successfully.
+- Create a Virtual Environment
+```
+python3 -m venv env-corsone
+```
+- Activate the Virtual Environment
+
+On macOS/Linux:
+```
+source env-corsone/bin/activate
+```
+On Windows:
+```
+env-corsone\Scripts\activate
+```
+- Clone the Repository:
 ```
 git clone https://github.com/omranisecurity/CorsOne.git
 cd CorsOne
 python3 -m pip install -r requirements.txt
+```
+- Exit the Virtual Environment (when done):
+```
+deactivate
 ```
 
 # Usage
