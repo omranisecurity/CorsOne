@@ -36,7 +36,7 @@ python3 -m pip install -r requirements.txt
 
 # Usage
 ```python
-python3 CorsOne [-h] [-u URL] [-l LIST] [-ch CUSTOM_HEADERS] [-rl RATE_LIMIT] [-m {GET,POST}] [-p PROXY] [-s] [-v] [-nc] [-o OUTPUT]
+python3 CorsOne [-h] [-u URL] [-l LIST] [-sof] [-ch CUSTOM_HEADERS] [-rl RATE_LIMIT] [-m {GET,POST}] [-p PROXY] [-s] [-v] [-nc] [-o OUTPUT]
 ```
 
 This will display help for the tool. Here are all the switches it supports.
