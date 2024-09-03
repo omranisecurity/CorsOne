@@ -101,7 +101,7 @@ or
 
 * Stop after finding the first CORS vulnerability:
 
-``python3 CorsOne.py -u https://example.com/ -ch "Cookie: name=value;\nAccept-Encoding: gzip, deflate, br"``
+``python3 CorsOne.py -u https://example.com/ -sof``
 
 * Check CORS misconfigurations with custom headers:
 
