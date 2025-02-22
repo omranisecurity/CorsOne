@@ -33,33 +33,59 @@ def scan(url, headers, output, no_color, rate_limit, method, stop_on_first, prox
     url = unquote(url, encoding='utf-8')
     origin = urlparse(url).netloc
     bypass_dict = {
-        'Reflected Origin': 'attacker.com',
-        'Trusted Subdomains': 'subdomain.' + origin,
-        'Regexp bypass': origin + '.attacker.com',
+        'Reflected Origin': 'https://attacker.com',
+        'Breaking TLS': f'http://{origin}',
+        'Trusted Subdomains': f'https://subdomain.{origin}',
+        'Unencrypted Subdomains': f'http://subdomain.{origin}',
         'Null Origin': 'Null',
-        'Breaking TLS': 'http://' + origin,
-        'Advance Regexp bypass 1': origin + ',.attacker.com',
-        'Advance Regexp bypass 2': origin + '&.attacker.com',
-        'Advance Regexp bypass 3': origin + "'.attacker.com",
-        'Advance Regexp bypass 4': origin + '".attacker.com',
-        'Advance Regexp bypass 5': origin + ';.attacker.com',
-        'Advance Regexp bypass 6': origin + '!.attacker.com',
-        'Advance Regexp bypass 7': origin + '$.attacker.com',
-        'Advance Regexp bypass 8': origin + '^.attacker.com',
-        'Advance Regexp bypass 9': origin + '*.attacker.com',
-        'Advance Regexp bypass 10': origin + '(.attacker.com',
-        'Advance Regexp bypass 11': origin + ').attacker.com',
-        'Advance Regexp bypass 12': origin + '+.attacker.com',
-        'Advance Regexp bypass 13': origin + '=.attacker.com',
-        'Advance Regexp bypass 14': origin + '`.attacker.com',
-        'Advance Regexp bypass 15': origin + '~.attacker.com',
-        'Advance Regexp bypass 16': origin + '-.attacker.com',
-        'Advance Regexp bypass 17': origin + '_.attacker.com',
-        'Advance Regexp bypass 18': origin + '=.attacker.com',
-        'Advance Regexp bypass 19': origin + '|.attacker.com',
-        'Advance Regexp bypass 20': origin + '{.attacker.com',
-        'Advance Regexp bypass 21': origin + '}.attacker.com',
-        'Advance Regexp bypass 22': origin + '%.attacker.com',
+        'Unencrypted domain ends allow': f'http://attacker{origin}',
+        'Domain ends allow': f'https://attacker{origin}',
+        'Unencrypted localhost regex implementation edge case': 'http://localhost.attacker.com/',
+        'Localhost regex implementation edge case': 'https://localhost.attacker.com/',
+        'Bypass 1': f'http://attacker.com.{origin}',
+        'Bypass 2': f'https://attacker.com.{origin}',
+        'Bypass 3': f'https://{origin}._.attacker.com',
+        'Bypass 4': f'https://{origin}.-.attacker.com',
+        'Bypass 5': f'https://{origin}.,.attacker.com',
+        'Bypass 6': f'https://{origin}.;.attacker.com',
+        'Bypass 7': f'https://{origin}.!.attacker.com',
+        "Bypass 8": f"https://{origin}.' .attacker.com",
+        'Bypass 9': f'https://{origin}".attacker.com',
+        'Bypass 10': f'https://{origin}.(.attacker.com',
+        'Bypass 11': f'https://{origin}.).attacker.com',
+        'Bypass 12': 'https://' + origin + '.{attacker.com',
+        'Bypass 13': 'https://' + origin + '.}attacker.com',
+        'Bypass 14': f'https://{origin}.*.attacker.com',
+        'Bypass 15': f'https://{origin}.&.attacker.com',
+        'Bypass 16': f'https://{origin}.`.attacker.com',
+        'Bypass 17': f'https://{origin}.+.attacker.com',
+        'Bypass 18': f'https://{origin}.attacker.com',
+        'Bypass 19': f'https://{origin}.=.attacker.com',
+        'Bypass 20': f'https://{origin}.~.attacker.com',
+        'Bypass 21': f'https://{origin}.$.attacker.com',
+        'Bypass 22': f'http://s{origin}/',
+        'Bypass 23': f'https://{origin.replace(".", "x")}',
+        'Advance Regexp bypass 1': f'{origin},.attacker.com',
+        'Advance Regexp bypass 2': f'{origin}&.attacker.com',
+        'Advance Regexp bypass 3': f"{origin}'.attacker.com",
+        'Advance Regexp bypass 4': f'{origin}".attacker.com',
+        'Advance Regexp bypass 5': f'{origin};.attacker.com',
+        'Advance Regexp bypass 6': f'{origin}!.attacker.com',
+        'Advance Regexp bypass 7': f'{origin}$.attacker.com',
+        'Advance Regexp bypass 8': f'{origin}^.attacker.com',
+        'Advance Regexp bypass 9': f'{origin}*.attacker.com',
+        'Advance Regexp bypass 10': f'{origin}(.attacker.com',
+        'Advance Regexp bypass 11': f'{origin}).attacker.com',
+        'Advance Regexp bypass 12': f'{origin}+.attacker.com',
+        'Advance Regexp bypass 13': f'{origin}=.attacker.com',
+        'Advance Regexp bypass 14': f'{origin}`.attacker.com',
+        'Advance Regexp bypass 15': f'{origin}~.attacker.com',
+        'Advance Regexp bypass 16': f'{origin}-.attacker.com',
+        'Advance Regexp bypass 17': f'{origin}_.attacker.com',
+        'Advance Regexp bypass 18': f'{origin}|.attacker.com',
+        'Advance Regexp bypass 19': 'https://' + origin + '.{.attacker.com',
+        'Advance Regexp bypass 19': 'https://' + origin + '.}.attacker.com',
+        'Advance Regexp bypass 21': f'{origin}%.attacker.com',
     }
 
     vulnerable_found = False
@@ -117,7 +143,7 @@ def validation(url):
     sys.exit(1)
 
 def main():
-    parser = argparse.ArgumentParser(prog='CorsOne', description='Fast CORS Misconfiguration Discovery Tool', epilog='Version: 0.9.5')
+    parser = argparse.ArgumentParser(prog='CorsOne', description='Fast CORS Misconfiguration Discovery Tool', epilog='Version: 0.9.6')
     parser.add_argument('-u', '--url', type=str, help="input target url to probe")
     parser.add_argument('-l', '--list', help="input file list of URLs")
     parser.add_argument('-sof', '--stop-on-first', action='store_true', help='stop testing after finding the first vulnerability')
@@ -139,7 +165,7 @@ def main():
     method = args.method if args.method else "GET"
 
     if args.version:
-        print("v0.9.5")
+        print("v0.9.6")
         sys.exit(0)
 
     # Check if both -u and -l are provided
