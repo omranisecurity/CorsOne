@@ -127,3 +127,4 @@ or
 
 # Acknowledgment
 - Thanks to <a href="https://book.hacktricks.xyz/pentesting-web/cors-bypass">hacktricks.xyz</a> for sharing the resources.
+- Thanks to <a href="https://portswigger.net/web-security/ssrf/url-validation-bypass-cheat-sheet">PortSwigger and the security researchers</a> for providing and collecting the test cases.
