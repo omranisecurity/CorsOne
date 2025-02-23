@@ -84,7 +84,7 @@ def scan(url, headers, output, no_color, rate_limit, method, stop_on_first, prox
         'Advance Regexp bypass 17': f'{origin}_.attacker.com',
         'Advance Regexp bypass 18': f'{origin}|.attacker.com',
         'Advance Regexp bypass 19': 'https://' + origin + '.{.attacker.com',
-        'Advance Regexp bypass 19': 'https://' + origin + '.}.attacker.com',
+        'Advance Regexp bypass 20': 'https://' + origin + '.}.attacker.com',
         'Advance Regexp bypass 21': f'{origin}%.attacker.com',
     }
 
