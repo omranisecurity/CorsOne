@@ -37,7 +37,7 @@ def scan(url, headers, output, no_color, rate_limit, method, stop_on_first, prox
         'Breaking TLS': f'http://{origin}',
         'Trusted Subdomains': f'https://subdomain.{origin}',
         'Unencrypted Subdomains': f'http://subdomain.{origin}',
-        'Null Origin': 'Null',
+        'Null Origin': 'null',
         'Unencrypted domain ends allow': f'http://attacker{origin}',
         'Domain ends allow': f'https://attacker{origin}',
         'Unencrypted localhost regex implementation edge case': 'http://localhost.attacker.com/',
@@ -143,7 +143,7 @@ def validation(url):
     sys.exit(1)
 
 def main():
-    parser = argparse.ArgumentParser(prog='CorsOne', description='Fast CORS Misconfiguration Discovery Tool', epilog='Version: 0.9.6')
+    parser = argparse.ArgumentParser(prog='CorsOne', description='Fast CORS Misconfiguration Discovery Tool', epilog='Version: 0.9.7')
     parser.add_argument('-u', '--url', type=str, help="input target url to probe")
     parser.add_argument('-l', '--list', help="input file list of URLs")
     parser.add_argument('-sof', '--stop-on-first', action='store_true', help='stop testing after finding the first vulnerability')
@@ -165,7 +165,7 @@ def main():
     method = args.method if args.method else "GET"
 
     if args.version:
-        print("v0.9.6")
+        print("v0.9.7")
         sys.exit(0)
 
     # Check if both -u and -l are provided
