@@ -26,7 +26,62 @@ CorsOne
 - Accurate and fast diagnosis of CORS Misconfiguration vulnerability
 - **STDIN** support enables easy integration with other tools or your own methodology
 
+
+---
+
 # Install
+
+
+---
+
+## 🐳 Run with Docker
+
+You can use the official Docker image of this tool without installing any dependencies:
+
+**1. Pull the image from DockerHub**
+```bash
+docker pull omranisecurity/corsone:latest
+```
+
+**2. Run the tool with Docker**
+```bash
+docker run --rm omranisecurity/corsone:latest -u https://example.com/
+```
+
+---
+
+## 🛠️ Manual Installation (Python)
+
+If you prefer to install and run the tool manually:
+
+**1. Create a Virtual Environment**
+```bash
+python3 -m venv env-corsone
+```
+
+**2. Activate the Virtual Environment**
+
+On macOS/Linux:
+```bash
+source env-corsone/bin/activate
+```
+On Windows:
+```bash
+env-corsone\Scripts\activate
+```
+
+**3. Clone the Repository:**
+```bash
+git clone https://github.com/omranisecurity/CorsOne.git
+cd CorsOne
+python3 -m pip install -r requirements.txt
+```
+
+**4. Exit the Virtual Environment (when done):**
+```bash
+deactivate
+```
+
 - Create a Virtual Environment
 ```
 python3 -m venv env-corsone
@@ -51,6 +106,8 @@ python3 -m pip install -r requirements.txt
 ```
 deactivate
 ```
+
+---
 
 # Usage
 ```python
