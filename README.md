@@ -1,11 +1,11 @@
-# 🛡️ CorsOne - CORS Misconfiguration Detection Tool
+# CorsOne - CORS Misconfiguration Detection Tool
 
 <div align="center">
 
 ![CorsOne Banner](https://img.shields.io/badge/Security%20Tool-CORS%20Testing-red?style=flat-square)
 ![Python Version](https://img.shields.io/badge/Python-3.7+-blue?style=flat-square)
 ![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)
-![Latest Release](https://img.shields.io/badge/Release-v0.9.9-brightblue?style=flat-square)
+![Latest Release](https://img.shields.io/badge/Release-v1.0-brightblue?style=flat-square)
 
 **Fast, Accurate, and Comprehensive CORS Misconfiguration Detection**
 
@@ -136,16 +136,6 @@ git clone https://github.com/omranisecurity/CorsOne.git
 cd CorsOne
 pip install -r requirements.txt
 python3 CorsOne.py -u https://example.com/
-```
-
-#### ⚙️ Dependency Management
-
-
-- **[requirements.txt](requirements.txt)** - Core dependencies
-
-```bash
-# Install development dependencies
-pip install -r requirements.txt
 ```
 
 ---
@@ -356,9 +346,9 @@ python3 CorsOne.py -u https://example.com/ --headers "Cookie: session=abc123"
 python3 CorsOne.py -u https://api.example.com/
 
 # Output:
-# [Vulnerable] Reflected Origin: https://attacker.com]
-# [Vulnerable] Breaking TLS: http://api.example.com
-# [Not Vulnerable] Null Origin: null
+# [VULNERABLE] Reflected Origin: https://attacker.com]
+# [VULNERABLE] Breaking TLS: http://api.example.com
+# [SAFE] Null Origin: null
 # ...
 ```
 
@@ -478,14 +468,14 @@ pip install -r requirements.txt
 # Test with a public website
 python3 CorsOne.py -u https://example.com/
 
-# Watch the output for [Vulnerable] or [Not Vulnerable] messages
+# Watch the output for [VULNERABLE] or [SAFE] messages
 ```
 
 **Step 3: Understand the Output**
 ```
-[Vulnerable] Reflected Origin: https://attacker.com]  ← CORS vulnerability found!
-[Not Vulnerable] Breaking TLS: http://example.com      ← No vulnerability here
-[Not Vulnerable] Null Origin: null                      ← This bypass didn't work
+[VULNERABLE] Reflected Origin: https://attacker.com]  ← CORS vulnerability found!
+[SAFE] Breaking TLS: http://example.com      ← Not vulnerable
+[SAFE] Null Origin: null                      ← This bypass didn't work
 ```
 
 ---
@@ -583,71 +573,38 @@ python3 CorsOne.py -l targets.txt -d evil.domain.com -o results.txt
 **Step 3: Analyze Results**
 ```bash
 # Results will show bypasses like:
-# [Vulnerable] Reflected Origin: https://evil.domain.com]
+# [VULNERABLE] Reflected Origin: https://evil.domain.com]
 # This means the server reflects back your custom domain
 ```
 
 ---
 
-### Tutorial 4: Integration with Security Workflows
+### Tutorial 4: Testing Cookie-Based Authenticated Endpoints
 
-**Scenario:** Integrate CorsOne into your security testing pipeline
+**Scenario:** Your target uses cookie-based authentication - test with custom headers
 
-**Step 1: Recon Phase - Gather URLs**
+**Step 1: Obtain Session Cookie**
 ```bash
-# Using amass (example tool)
-amass enum -d example.com -o urls.txt
+# Get your session cookie from the application
+# Extract the cookie value from browser or interceptor
+SESSION_COOKIE="sessionid=abc123def456xyz"
 ```
 
-**Step 2: Filter to API endpoints**
-```bash
-grep -E "(api|ajax|rest)" urls.txt > api_urls.txt
-```
-
-**Step 3: Scan for CORS Issues**
-```bash
-python3 CorsOne.py -l api_urls.txt -rl 1 -o cors_findings.txt
-```
-
-**Step 4: Report Vulnerable Endpoints**
-```bash
-# Extract only vulnerable endpoints
-grep "Vulnerable" cors_findings.txt > critical_issues.txt
-
-# Count them
-wc -l critical_issues.txt
-```
-
----
-
-### Tutorial 5: Testing Authenticated Endpoints
-
-**Scenario:** Your target requires authentication - use custom headers
-
-**Step 1: Obtain Valid Session**
-```bash
-# Get your session token/cookie from the application
-# Store it in a variable or file
-TOKEN="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-COOKIE="sessionid=abc123def456"
-```
-
-**Step 2: Scan with Authentication**
+**Step 2: Scan with Cookie Header**
 ```bash
 python3 CorsOne.py -u https://api.example.com/ \
-  -H "Authorization: Bearer $TOKEN" \
-  -H "Cookie: $COOKIE"
+  -H "Cookie: sessionid=abc123def456xyz"
 ```
 
 **Step 3: Analyze Results**
 ```bash
-# The scan will use your authenticated session
+# The scan will use your authenticated session with the cookie
 # This helps find CORS issues in protected endpoints
 ```
 
 ---
 
-### Tutorial 6: Proxy-Based Testing (Burp Suite Integration)
+### Tutorial 5: Proxy-Based Testing (Burp Suite Integration)
 
 **Scenario:** You want to intercept and inspect requests in Burp Suite
 
@@ -669,7 +626,7 @@ python3 CorsOne.py -u https://example.com/ \
 
 ---
 
-### Tutorial 7: Rate-Limited Scanning (Avoid Detection)
+### Tutorial 6: Rate-Limited Scanning (Avoid Detection)
 
 **Scenario:** Target has rate limiting or IDS detection
 
@@ -696,7 +653,7 @@ grep -i "error\|429\|rate" scan.log
 
 ---
 
-### Tutorial 8: CORS Testing on Different HTTP Methods
+### Tutorial 7: CORS Testing on Different HTTP Methods
 
 **Scenario:** API supports multiple HTTP methods (GET, POST, PUT, DELETE)
 
@@ -728,17 +685,17 @@ python3 CorsOne.py -u https://api.example.com/users -m OPTIONS
 ### Understanding the Results
 
 ```
-[Vulnerable] Reflected Origin: https://attacker.com]
-[Not Vulnerable] Breaking TLS: http://example.com
-[Vulnerable] Trusted Subdomains: https://subdomain.example.com
+[VULNERABLE] Reflected Origin: https://attacker.com]
+[SAFE] Breaking TLS: http://example.com
+[VULNERABLE] Trusted Subdomains: https://subdomain.example.com
 ```
 
-**[Vulnerable]** (Green in terminal)
+**[VULNERABLE]** (Green in terminal)
 - The server responded with `Access-Control-Allow-Origin: [origin]` AND `Access-Control-Allow-Credentials: true`
 - This is a real CORS vulnerability
 - An attacker could exploit this
 
-**[Not Vulnerable]** (Red in terminal)
+**[SAFE]** (Red in terminal)
 - The server did NOT respond with both required headers
 - Either the origin wasn't allowed OR credentials flag wasn't set
 - This bypass technique didn't work
@@ -746,10 +703,10 @@ python3 CorsOne.py -u https://api.example.com/users -m OPTIONS
 ### Sample Output File
 
 ```
-https://api.example.com/ [Vulnerable] Reflected Origin: https://attacker.com]
-https://api.example.com/ [Vulnerable] Breaking TLS: http://api.example.com
-https://api.example.com/ [Not Vulnerable] Null Origin: null
-https://api.example.com/ [Not Vulnerable] Trusted Subdomains: https://subdomain.example.com
+https://api.example.com/ [VULNERABLE] Reflected Origin: https://attacker.com]
+https://api.example.com/ [VULNERABLE] Breaking TLS: http://api.example.com
+https://api.example.com/ [SAFE] Null Origin: null
+https://api.example.com/ [SAFE] Trusted Subdomains: https://subdomain.example.com
 ```
 
 ---
@@ -816,3 +773,8 @@ If you find CorsOne helpful:
 **Happy CORS Testing! 🛡️**
 
 For questions or support, visit the GitHub repository or contact the developer.
+
+# Acknowledgment
+
+- Thanks to <a href="https://book.hacktricks.xyz/pentesting-web/cors-bypass">hacktricks.xyz</a> for sharing the resources.
+- Thanks to <a href="https://portswigger.net/web-security/ssrf/url-validation-bypass-cheat-sheet">PortSwigger and the security researchers</a> for providing and collecting the test cases.

@@ -564,6 +564,41 @@ class URLValidator:
             raise ValueError(f"Invalid URL: {url}")
 
 
+class DomainValidator:
+    """Validates that custom domain is a base domain without protocol or subdomain."""
+
+    @staticmethod
+    def validate(domain: str) -> str:
+        """
+        Validate custom domain.
+        
+        Args:
+            domain: Domain to validate
+            
+        Returns:
+            Validated domain
+            
+        Raises:
+            ValueError: If domain is invalid
+        """
+        domain = domain.strip()
+        
+        # Check for protocol prefixes
+        if domain.startswith('http://') or domain.startswith('https://'):
+            raise ValueError("Custom domain should not include 'http://' or 'https://' protocol")
+        
+        # Check if it contains subdomain (multiple dots)
+        parts = domain.split('.')
+        if len(parts) < 2:
+            raise ValueError("Custom domain must be a valid domain (e.g., example.com)")
+        
+        # Validate domain format
+        if validators.domain(domain):
+            return domain
+        else:
+            raise ValueError(f"Invalid domain format: {domain}")
+
+
 def create_argument_parser() -> argparse.ArgumentParser:
     """
     Create and configure argument parser.
@@ -690,6 +725,13 @@ def main():
     if args.proxy:
         proxy = {'http': args.proxy, 'https': args.proxy}
     
+    # Validate custom domain
+    try:
+        custom_domain = DomainValidator.validate(args.custom_domain)
+    except ValueError as e:
+        logger.get_logger().error(f"{e}")
+        sys.exit(1)
+    
     # Process each URL
     for url_input in urls:
         try:
@@ -702,7 +744,7 @@ def main():
         config = ScanConfig(
             url=url,
             method=args.method,
-            custom_domain=args.custom_domain,
+            custom_domain=custom_domain,
             rate_limit=args.rate_limit,
             timeout=args.timeout,
             retries=args.retries,
