@@ -5,7 +5,7 @@
 ![CorsOne Banner](https://img.shields.io/badge/Security%20Tool-CORS%20Testing-red?style=flat-square)
 ![Python Version](https://img.shields.io/badge/Python-3.7+-blue?style=flat-square)
 ![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)
-![Latest Release](https://img.shields.io/badge/Release-v1.0-brightblue?style=flat-square)
+![Latest Release](https://img.shields.io/badge/Release-v1.0.0%20beta-brightblue?style=flat-square)
 
 **Fast, Accurate, and Comprehensive CORS Misconfiguration Detection**
 
@@ -84,6 +84,19 @@ Unlike generic security scanners, CorsOne:
 6. **Localhost Edge Cases** - Localhost regex bypasses
 7. **Domain Separation Bypasses** - 20+ variants with special characters
 8. **Advanced Regexp Bypasses** - Regex metacharacter injections
+
+---
+
+## ⚡ Performance Comparison
+
+CorsOne has been significantly optimized for speed. Here's a performance comparison between v0.9.8 and v1.0.0 beta:
+
+**Test Command:** `python3 CorsOne.py -u target.com -s`
+
+- **v0.9.8 (Previous Version):** ~5.5 seconds (real time)
+- **v1.0.0 beta (Current Version):** ~0.8 seconds (real time)
+
+**Improvement:** Approximately 7x faster execution time.
 
 ---
 
