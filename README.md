@@ -315,27 +315,27 @@ python3 CorsOne.py -u https://example.com/ --headers "Cookie: session=abc123"
 
 ## 🎯 CLI Options
 
-| Option | Short | Type | Description | Example |
-|--------|-------|------|-------------|---------|
-| URL | `-u` | string | Target URL to scan | `-u https://example.com/` |
-| List | `-l` | file | File containing URLs | `-l targets.txt` |
-| Output | `-o` | file | Save results to file | `-o results.txt` |
-| Format | `-f` | choice | Output format (txt/json) | `-f json` |
-| Log | `--log` | file | Save debug logs to file | `--log scan.log` |
-| Vulnerable Only | `-vo`, `--vuln-only` | flag | Show and save only vulnerable endpoints | `-vo` |
-| No Color | `-nc` | flag | Disable colored output | `-nc` |
-| Domain | `-d` | string | Custom domain for testing | `-d attacker.com` |
-| Method | `-m` | string | HTTP method to use | `-m POST` |
-| Workers | `-w` | int | Concurrent workers (default: 5) | `-w 10` |
-| Rate Limit | `-rl` | float | Delay between requests (sec) | `-rl 2` |
-| Timeout | `-t` | int | Request timeout (seconds) | `-t 15` |
-| Retries | `-r` | int | Number of retries | `-r 3` |
-| Proxy | `-p` | string | HTTP/HTTPS proxy URL | `-p http://proxy:8080` |
-| Stop on First | `-sof` | flag | Exit after first vulnerability | `-sof` |
-| Verbose | `-v` | flag | Verbose logging | `-v` |
-| Silent | `-s` | flag | No banner output | `-s` |
-| Help | `-h` | flag | Show help message | `-h` |
-| Version | `--version` | flag | Show version information | `--version` |
+| Option | Short | Type | Description | Default | Example |
+|--------|-------|------|-------------|---------|---------|
+| URL | `-u` | string | Target URL to scan | - | `-u https://example.com/` |
+| List | `-l` | file | File containing URLs | - | `-l targets.txt` |
+| Output | `-o` | file | Save results to file | - | `-o results.txt` |
+| Format | `-f` | choice | Output format (txt/json) | txt | `-f json` |
+| Log | `--log` | file | Save debug logs to file | - | `--log scan.log` |
+| Vulnerable Only | `-vo`, `--vuln-only` | flag | Show and save only vulnerable endpoints | false | `-vo` |
+| No Color | `-nc` | flag | Disable colored output | false | `-nc` |
+| Domain | `-d` | string | Custom domain for testing | attacker.com | `-d attacker.com` |
+| Method | `-m` | string | HTTP method to use | GET | `-m POST` |
+| Workers | `-w` | int | Concurrent workers | 5 | `-w 10` |
+| Rate Limit | `-rl` | float | Delay between requests (sec) | 0 | `-rl 2` |
+| Timeout | `-t` | int | Request timeout (seconds) | 10 | `-t 15` |
+| Retries | `-r` | int | Number of retries | 3 | `-r 3` |
+| Proxy | `-p` | string | HTTP/HTTPS proxy URL | - | `-p http://proxy:8080` |
+| Stop on First | `-sof` | flag | Exit after first vulnerability | false | `-sof` |
+| Verbose | `-v` | flag | Verbose logging | false | `-v` |
+| Silent | `-s` | flag | No banner output | false | `-s` |
+| Help | `-h` | flag | Show help message | - | `-h` |
+| Version | `--version` | flag | Show version information | - | `--version` |
 
 ---
 
