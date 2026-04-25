@@ -19,15 +19,20 @@
 
 1. [What is CorsOne?](#what-is-corsone)
 2. [Features](#-features)
-3. [Installation](#-installation)
-4. [Quick Start](#-quick-start)
-5. [Usage Guide](#-usage-guide)
-6. [CLI Options](#-cli-options)
-7. [Examples](#-examples)
-8. [Tutorial](#-tutorial)
-9. [Output Explanation](#-output-explanation)
-10. [Troubleshooting](#-troubleshooting)
+3. [Performance Comparison](#-performance-comparison)
+4. [Installation](#-installation)
+5. [Quick Start](#-quick-start)
+6. [Usage Guide](#-usage-guide)
+7. [CLI Options](#-cli-options)
+8. [Examples](#-examples)
+9. [Tutorial](#-tutorial)
+10. [Output Explanation](#-output-explanation)
 11. [Contributing](#-contributing)
+12. [Acknowledgment](#acknowledgment)
+13. [License](#-license)
+14. [Developer](#-developer)
+15. [Support](#-support)
+16. [Additional Resources](#-additional-resources)
 
 ---
 
@@ -743,6 +748,13 @@ Found a bug? Have a feature request?
 
 ---
 
+## Acknowledgment
+
+- Thanks to <a href="https://book.hacktricks.xyz/pentesting-web/cors-bypass">hacktricks.xyz</a> for sharing the resources.
+- Thanks to <a href="https://portswigger.net/web-security/ssrf/url-validation-bypass-cheat-sheet">PortSwigger and the security researchers</a> for providing and collecting the test cases.
+
+---
+
 ## 📄 License
 
 This project is licensed under the MIT License - see [LICENSE](LICENSE) file for details.
@@ -786,8 +798,3 @@ If you find CorsOne helpful:
 **Happy CORS Testing! 🛡️**
 
 For questions or support, visit the GitHub repository or contact the developer.
-
-# Acknowledgment
-
-- Thanks to <a href="https://book.hacktricks.xyz/pentesting-web/cors-bypass">hacktricks.xyz</a> for sharing the resources.
-- Thanks to <a href="https://portswigger.net/web-security/ssrf/url-validation-bypass-cheat-sheet">PortSwigger and the security researchers</a> for providing and collecting the test cases.
