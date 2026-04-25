@@ -1,4 +1,4 @@
-# CorsOne - CORS Misconfiguration Detection Tool
+# CorsOne - Fast CORS Misconfiguration Discovery Tool
 
 <div align="center">
 
