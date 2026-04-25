@@ -1,13 +1,7 @@
-# CorsOne - Fast CORS Misconfiguration Discovery Tool
-
-<div align="center">
-
-![CorsOne Banner](https://img.shields.io/badge/Security%20Tool-CORS%20Testing-red?style=flat-square)
-![Python Version](https://img.shields.io/badge/Python-3.7+-blue?style=flat-square)
-![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)
-![Latest Release](https://img.shields.io/badge/Release-v1.0.0%20beta-brightblue?style=flat-square)
-
-**Fast, Accurate, and Comprehensive CORS Misconfiguration Detection**
+<h1 align="center">CorsOne</h1>
+<h4 align="center">
+<b>Fast, Accurate, and Comprehensive CORS Misconfiguration Detection</b>
+</h4>
 
 [Features](#-features) • [Installation](#-installation) • [Quick Start](#-quick-start) • [Usage Guide](#-usage-guide) • [Examples](#-examples) • [Tutorial](#-tutorial)
 
