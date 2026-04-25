@@ -1,10 +1,8 @@
-<h1 align="center">CorsOne</h1>
-<h4 align="center">
+<div align="center">
+<h1>CorsOne</h1>
 <b>Fast, Accurate, and Comprehensive CORS Misconfiguration Detection</b>
-</h4>
-
+  
 [Features](#-features) • [Installation](#-installation) • [Quick Start](#-quick-start) • [Usage Guide](#-usage-guide) • [Examples](#-examples) • [Tutorial](#-tutorial)
-
 </div>
 
 ---
