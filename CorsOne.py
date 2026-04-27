@@ -114,15 +114,15 @@ class CORSBypassPayloads:
             Dictionary of bypass names and their payloads
         """
         return {
-            'Reflected Origin': f'https://{malicious_domain}]',
+            'Reflected Origin': f'https://{malicious_domain}',
             'Breaking TLS': f'http://{origin}',
             'Trusted Subdomains': f'https://subdomain.{origin}',
             'Unencrypted Subdomains': f'http://subdomain.{origin}',
             'Null Origin': 'null',
             'Unencrypted domain ends allow': f'http://attacker{origin}',
             'Domain ends allow': f'https://attacker{origin}',
-            'Unencrypted localhost regex': f'http://localhost.{malicious_domain}/',
-            'Localhost regex': f'https://localhost.{malicious_domain}/',
+            'Unencrypted localhost regex': f'http://localhost.{malicious_domain}',
+            'Localhost regex': f'https://localhost.{malicious_domain}',
             'Bypass 1': f'http://{malicious_domain}.{origin}',
             'Bypass 2': f'https://{malicious_domain}.{origin}',
             'Bypass 3': f'https://{origin}._.{malicious_domain}',
@@ -144,7 +144,7 @@ class CORSBypassPayloads:
             'Bypass 19': f'https://{origin}.=.{malicious_domain}',
             'Bypass 20': f'https://{origin}.~.{malicious_domain}',
             'Bypass 21': f'https://{origin}.$.{malicious_domain}',
-            'Bypass 22': f'http://s{origin}/',
+            'Bypass 22': f'http://s{origin}',
             'Bypass 23': f'https://{origin.replace(".", "x")}',
             'Regexp bypass 1': f'{origin},.{malicious_domain}',
             'Regexp bypass 2': f'{origin}&.{malicious_domain}',
