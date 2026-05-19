@@ -16,26 +16,25 @@ License: MIT
 from __future__ import annotations
 
 import argparse
+import asyncio  # PERF 1
 import json
 import logging
 import sys
+from contextlib import asynccontextmanager  # PERF 3
 from dataclasses import dataclass, asdict, field
 from pathlib import Path
 from time import sleep
+from threading import Lock
 from typing import Dict, List, Optional, Tuple, Set
 from urllib.parse import unquote, urlparse
-from concurrent.futures import ThreadPoolExecutor, as_completed
 
-import requests
+import aiohttp  # PERF 1
+import aiodns  # PERF 2
+from aiohttp import ClientTimeout, TCPConnector  # PERF 1
 import validators
 from colorama import Fore, Style, init
-from requests.adapters import HTTPAdapter
-from urllib3.exceptions import ProtocolError  # FIX B4
-from requests.exceptions import RequestException, Timeout, ConnectionError
-from urllib3.util.retry import Retry
-from threading import Lock
 
-# Suppress SSL warnings
+# Suppress SSL warnings (logger only; not importing urllib3 directly)
 urllib3_logger = logging.getLogger('urllib3')
 urllib3_logger.setLevel(logging.WARNING)
 
@@ -222,71 +221,6 @@ class LoggerManager:
         return self.logger
 
 
-class HTTPSessionManager:
-    """Manages HTTP sessions with retry logic and connection pooling."""
-
-    def __init__(self, config: ScanConfig):
-        """
-        Initialize session manager.
-        
-        Args:
-            config: Scan configuration
-        """
-        self.config = config
-        self.session = self._create_session()
-
-    def _create_session(self) -> requests.Session:
-        """
-        Create optimized requests session with retry logic.
-        
-        Returns:
-            Configured requests Session
-        """
-        session = requests.Session()
-        
-        # Configure retry strategy
-        retry_strategy = Retry(
-            total=self.config.retries,
-            backoff_factor=self.config.backoff_factor,
-            status_forcelist=[429, 500, 502, 503, 504],
-            allowed_methods=['GET', 'POST', 'HEAD']
-        )
-        
-        # Use HTTPAdapter for connection pooling
-        adapter = HTTPAdapter(
-            max_retries=retry_strategy,
-            pool_connections=10,
-            pool_maxsize=20
-        )
-        
-        session.mount('http://', adapter)
-        session.mount('https://', adapter)
-        
-        # Set default headers
-        session.headers.update({
-            'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:122.0) Gecko/20100101 Firefox/122.0',
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
-            'Accept-Language': 'en-US,en;q=0.9',
-            'Accept-Encoding': 'gzip, deflate',
-            'Connection': 'keep-alive',
-            'Upgrade-Insecure-Requests': '1'
-        })
-        
-        return session
-
-    def close(self):
-        """Close session and cleanup."""
-        self.session.close()
-
-    def __enter__(self):
-        """Context manager entry."""
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        """Context manager exit."""
-        self.close()
-
-
 class CORSVulnerabilityScanner:
     """Main CORS vulnerability scanner."""
 
@@ -299,98 +233,147 @@ class CORSVulnerabilityScanner:
         """
         self.config = config
         self.logger = LoggerManager().get_logger()
-        self.session_manager = HTTPSessionManager(config)
         self.results: List[ScanResult] = []
         self.vulnerable_results: List[ScanResult] = []
         self.error_count: int = 0
         self.http_status_codes: Dict[int, int] = {}
 
-    def test_bypass(self, url: str, bypass_name: str, bypass_value: str) -> ScanResult:
-        """
-        Test a single CORS bypass technique.
-        
-        Args:
-            url: Target URL
-            bypass_name: Name of bypass technique
-            bypass_value: Bypass payload value
-            
-        Returns:
-            ScanResult object with test outcome
-        """
+    async def _test_bypass_async(
+        self,
+        session: aiohttp.ClientSession,
+        url: str,
+        bypass_name: str,
+        bypass_value: str,
+    ) -> ScanResult:  # PERF 1
+        headers = {"Origin": bypass_value}
+        if self.config.custom_headers:
+            headers.update({k: v for k, v in self.config.custom_headers.items()})
+
         try:
-            headers = dict(self.session_manager.session.headers)  # FIX B3
-            headers['Origin'] = bypass_value
-            
-            # Add custom headers if provided
-            if self.config.custom_headers:
-                headers.update({k: v for k, v in self.config.custom_headers.items()})  # FIX B3
-            
-            response = self.session_manager.session.request(
+            async with session.request(
                 self.config.method,
                 url,
                 headers=headers,
-                proxies=self.config.proxy,
-                timeout=self.config.timeout,
-                allow_redirects=False
-            )
-            
-            acac = response.headers.get('Access-Control-Allow-Credentials')
-            acao = response.headers.get('Access-Control-Allow-Origin')
-            
-            is_vulnerable = bool(acac == 'true' and acao == bypass_value)
-            
-            # Track HTTP status codes
-            status_code = response.status_code
-            with log_lock:  # FIX B2
-                self.http_status_codes[status_code] = self.http_status_codes.get(status_code, 0) + 1  # FIX B2
-            
+                proxy=self._proxy_url(),
+                allow_redirects=False,
+            ) as resp:
+                acac = resp.headers.get("Access-Control-Allow-Credentials")
+                acao = resp.headers.get("Access-Control-Allow-Origin")
+                is_vulnerable = acac == "true" and acao == bypass_value
+
+                with log_lock:  # PERF 1
+                    self.http_status_codes[resp.status] = (
+                        self.http_status_codes.get(resp.status, 0) + 1
+                    )
+
+                result = ScanResult(
+                    url=url,
+                    bypass_name=bypass_name,
+                    bypass_value=bypass_value,
+                    is_vulnerable=is_vulnerable,
+                    response_code=resp.status,
+                    acac=acac,
+                    acao=acao,
+                )
+
+        except asyncio.TimeoutError:  # PERF 1
             result = ScanResult(
                 url=url,
                 bypass_name=bypass_name,
                 bypass_value=bypass_value,
-                is_vulnerable=is_vulnerable,
-                response_code=status_code,
-                acac=acac,
-                acao=acao
+                is_vulnerable=False,
+                error="Timeout",
             )
-            
-            self._print_result(result)
-            
-            if self.config.rate_limit:
-                sleep(self.config.rate_limit)
-            
-            return result
-            
-        except (Timeout, ConnectionError) as e:
-            self.logger.warning(f"Network error for {bypass_name}: {e}")
             self.error_count += 1
-            return ScanResult(
+        except aiohttp.ClientError as exc:  # PERF 1
+            result = ScanResult(
                 url=url,
                 bypass_name=bypass_name,
                 bypass_value=bypass_value,
                 is_vulnerable=False,
-                error=f"Network error: {str(e)}"
+                error=str(exc),
             )
-        except RequestException as e:
-            self.logger.warning(f"Request error for {bypass_name}: {e}")
             self.error_count += 1
-            return ScanResult(
-                url=url,
-                bypass_name=bypass_name,
-                bypass_value=bypass_value,
-                is_vulnerable=False,
-                error=f"Request error: {str(e)}"
-            )
-        except Exception as e:
-            self.logger.error(f"Unexpected error for {bypass_name}: {e}")
-            self.error_count += 1
-            return ScanResult(
-                url=url,
-                bypass_name=bypass_name,
-                bypass_value=bypass_value,
-                is_vulnerable=False,
-                error=f"Unexpected error: {str(e)}"
-            )
+
+        self._print_result(result)
+        if self.config.rate_limit:
+            await asyncio.sleep(self.config.rate_limit)  # PERF 1
+        return result
+
+    @asynccontextmanager
+    async def _make_session(self):  # PERF 3
+        connector = TCPConnector(
+            ssl=False,
+            use_dns_cache=True,
+            ttl_dns_cache=300,
+            limit=self.config.max_workers * 2,
+            resolver=aiohttp.AsyncResolver(),
+        )  # PERF 2
+        timeout = ClientTimeout(total=self.config.timeout, connect=5)
+        default_headers = {
+            "User-Agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:122.0) Gecko/20100101 Firefox/122.0",
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "Accept-Language": "en-US,en;q=0.9",
+            "Accept-Encoding": "gzip, deflate",
+            "Connection": "keep-alive",
+        }
+        async with aiohttp.ClientSession(
+            connector=connector,
+            headers=default_headers,
+            timeout=timeout,
+        ) as session:
+            yield session
+
+    def _proxy_url(self) -> Optional[str]:  # PERF 3
+        if not self.config.proxy:
+            return None
+        return self.config.proxy.get("https") or self.config.proxy.get("http")
+
+    def scan(self, urls: Optional[List[str]] = None) -> Tuple[List[ScanResult], int]:  # PERF 1
+        return asyncio.run(self._async_scan(urls or [self.config.url]))
+
+    async def _async_scan(self, urls: List[str]) -> Tuple[List[ScanResult], int]:  # PERF 1
+        if self.config.verbose:
+            self.logger.info(f"Using {self.config.max_workers} workers")
+
+        async with self._make_session() as session:
+            for url in urls:
+                url = unquote(url, encoding="utf-8")
+                origin = urlparse(url).netloc
+
+                if self.config.verbose:
+                    self.logger.info(f"Starting scan on {url}")
+
+                payloads = CORSBypassPayloads.generate(
+                    origin, self.config.custom_domain
+                )
+
+                semaphore = asyncio.Semaphore(self.config.max_workers)
+
+                async def bounded(name: str, value: str) -> ScanResult:
+                    async with semaphore:
+                        return await self._test_bypass_async(
+                            session, url, name, value
+                        )
+
+                if self.config.stop_on_first:
+                    for name, value in payloads.items():
+                        result = await self._test_bypass_async(
+                            session, url, name, value
+                        )
+                        self.results.append(result)
+                        if result.is_vulnerable:
+                            self.vulnerable_results.append(result)
+                            break
+                else:
+                    tasks = [bounded(name, value) for name, value in payloads.items()]
+                    url_results = await asyncio.gather(*tasks)
+                    self.results.extend(url_results)
+                    self.vulnerable_results.extend(
+                        [r for r in url_results if r.is_vulnerable]
+                    )
+
+        return self.results, len(self.vulnerable_results)
 
     def _print_result(self, result: ScanResult):
         """
@@ -411,57 +394,6 @@ class CORSVulnerabilityScanner:
             else:
                 color = Fore.GREEN if result.is_vulnerable else Fore.RED
                 print(f"{color}{output}{Style.RESET_ALL}")
-
-    def scan(self) -> Tuple[List[ScanResult], int]:
-        """
-        Perform comprehensive CORS vulnerability scan.
-        
-        Returns:
-            Tuple of (all_results, vulnerable_count)
-        """
-        url = unquote(self.config.url, encoding='utf-8')
-        origin = urlparse(url).netloc
-        
-        if self.config.verbose:
-            self.logger.info(f"Starting scan on {url}")
-            self.logger.info(f"Using {self.config.max_workers} workers")
-        
-        payloads = CORSBypassPayloads.generate(origin, self.config.custom_domain)
-        
-        try:
-            with ThreadPoolExecutor(max_workers=self.config.max_workers) as executor:
-                futures = {
-                    executor.submit(self.test_bypass, url, name, value): (name, value)
-                    for name, value in payloads.items()
-                }
-                
-                for i, future in enumerate(as_completed(futures), 1):
-                    try:
-                        result = future.result()
-                        self.results.append(result)
-                        
-                        if result.is_vulnerable:
-                            self.vulnerable_results.append(result)
-                            
-                            if self.config.stop_on_first:
-                                self.logger.info("Vulnerability found, stopping scan")
-                                for f in futures:
-                                    f.cancel()
-                                break
-                        
-                        if self.config.verbose and i % 10 == 0:
-                            self.logger.info(f"Progress: {i}/{len(payloads)}")
-                            
-                    except Exception as e:
-                        self.logger.error(f"Error processing result: {e}")
-        
-        except KeyboardInterrupt:
-            self.logger.warning("Scan interrupted by user")
-            sys.exit(0)
-        finally:
-            self.session_manager.close()
-        
-        return self.results, len(self.vulnerable_results)
 
     def save_results(self):
         """Save results to output file in specified format."""
@@ -732,43 +664,46 @@ def main():
     except ValueError as e:
         logger.get_logger().error(f"{e}")
         sys.exit(1)
-    
-    # Process each URL
+
+    validated_urls: List[str] = []
     for url_input in urls:
         try:
-            url = URLValidator.validate(url_input)
+            validated_urls.append(URLValidator.validate(url_input))
         except ValueError as e:
             logger.get_logger().error(f"{e}")
-            continue
-        
-        # Create configuration
-        config = ScanConfig(
-            url=url,
-            method=args.method,
-            custom_domain=custom_domain,
-            rate_limit=args.rate_limit,
-            timeout=args.timeout,
-            retries=args.retries,
-            max_workers=args.workers,
-            stop_on_first=args.stop_on_first,
-            no_color=args.no_color,
-            output_file=args.output,
-            output_format=args.format,
-            output_log=args.log,
-            custom_headers=custom_headers,
-            proxy=proxy,
-            verbose=args.verbose,
-            vulnerable_only=args.vuln_only
-        )
-        
-        # Run scanner
-        scanner = CORSVulnerabilityScanner(config)
-        results, vulnerable_count = scanner.scan()
-        
-        # Save and display results
-        scanner.save_results()
-        if not args.silent:
-            scanner.print_summary()
+    
+    if not validated_urls:
+        logger.get_logger().error("No valid URLs to scan")
+        sys.exit(1)
+    
+    # Create configuration using the first URL as a placeholder
+    config = ScanConfig(
+        url=validated_urls[0],
+        method=args.method,
+        custom_domain=custom_domain,
+        rate_limit=args.rate_limit,
+        timeout=args.timeout,
+        retries=args.retries,
+        max_workers=args.workers,
+        stop_on_first=args.stop_on_first,
+        no_color=args.no_color,
+        output_file=args.output,
+        output_format=args.format,
+        output_log=args.log,
+        custom_headers=custom_headers,
+        proxy=proxy,
+        verbose=args.verbose,
+        vulnerable_only=args.vuln_only
+    )
+    
+    # Run scanner once for all URLs with a shared session
+    scanner = CORSVulnerabilityScanner(config)
+    results, vulnerable_count = scanner.scan(validated_urls)
+    
+    # Save and display results
+    scanner.save_results()
+    if not args.silent:
+        scanner.print_summary()
 
 
 if __name__ == '__main__':

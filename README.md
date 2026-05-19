@@ -42,7 +42,8 @@
 Unlike generic security scanners, CorsOne:
 - ✅ **Tests 40+ CORS bypass techniques** automatically
 - ✅ **Provides accurate results** with low false positives
-- ✅ **Fast scanning** - can test multiple URLs quickly
+- ✅ **High-performance async scanning** using asyncio and aiohttp
+- ✅ **DNS caching with aiodns** for repeated hostname efficiency
 - ✅ **Easy integration** - supports STDIN and file input
 - ✅ **Flexible customization** - supports custom headers, proxies, and methods
 - ✅ **Color-coded output** - easy to identify vulnerabilities
@@ -67,6 +68,8 @@ Unlike generic security scanners, CorsOne:
 
 ### Technical Features
 - **No False Positives** - Checks for both ACAO header and credentials flag
+- **Async HTTP Engine** - Built on aiohttp for non-blocking, concurrent requests
+- **DNS Caching** - Uses aiodns caching to reduce repeated hostname lookups
 - **URL Validation** - Automatically validates and formats URLs
 - **Color-Coded Output** - Green for vulnerable, red for not vulnerable
 - **Error Handling** - Graceful handling of network errors and timeouts
@@ -86,14 +89,14 @@ Unlike generic security scanners, CorsOne:
 
 ## ⚡ Performance Comparison
 
-CorsOne has been significantly optimized for speed. Here's a performance comparison between v0.9.8 and v1.0.0 beta:
+CorsOne has been significantly optimized for speed with a complete async HTTP refactor. The current version uses `asyncio` and `aiohttp` with DNS caching for better throughput, lower latency, and reduced thread overhead.
 
 **Test Command:** `python3 CorsOne.py -u target.com -s`
 
 - **v0.9.8 (Previous Version):** ~5.5 seconds (real time)
 - **v1.0.0 beta (Current Version):** ~0.8 seconds (real time)
 
-**Improvement:** Approximately 7x faster execution time.
+**Improvement:** Approximately 7x faster execution time, now powered by an async aiohttp engine and cached DNS resolution.
 
 ---
 
@@ -135,6 +138,9 @@ pip install -r requirements.txt
 
 # 4. Verify Installation
 python3 CorsOne.py --help
+
+> Note: `requirements.txt` now includes `aiohttp` and `aiodns` for the async HTTP engine and DNS caching support.
+> The legacy `requests` dependency has been removed.
 
 # 5. Deactivate When Done
 deactivate
