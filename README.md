@@ -283,8 +283,8 @@ python3 CorsOne.py -u https://example.com/ --no-color
 **Custom Domain for Testing:**
 ```bash
 # Instead of "attacker.com", use your domain
-python3 CorsOne.py -u https://example.com/ -d attacker.com
-python3 CorsOne.py -u https://example.com/ --domain your-domain.com
+python3 CorsOne.py -u https://example.com/ -cd attacker.com # FIX B1
+python3 CorsOne.py -u https://example.com/ --custom-domain your-domain.com # FIX B1
 ```
 
 **Custom HTTP Method:**
@@ -335,7 +335,7 @@ python3 CorsOne.py -u https://example.com/ --headers "Cookie: session=abc123"
 | Log | `--log` | file | Save debug logs to file | - | `--log scan.log` |
 | Vulnerable Only | `-vo`, `--vuln-only` | flag | Show and save only vulnerable endpoints | false | `-vo` |
 | No Color | `-nc` | flag | Disable colored output | false | `-nc` |
-| Domain | `-d` | string | Custom domain for testing | attacker.com | `-d attacker.com` |
+| Domain | `-cd` | string | Custom domain for testing | attacker.com | `-cd attacker.com` | <!-- FIX B1 -->
 | Method | `-m` | string | HTTP method to use | GET | `-m POST` |
 | Workers | `-w` | int | Concurrent workers | 5 | `-w 10` |
 | Rate Limit | `-rl` | float | Delay between requests (sec) | 0 | `-rl 2` |
@@ -407,7 +407,7 @@ python3 CorsOne.py -u https://example.com/ -o findings.txt --log activity.log
 ### Example 5: Quick Vulnerability Check
 ```bash
 # Stop after finding first vulnerability
-python3 CorsOne.py -u https://example.com/ -sof -d evil.com
+python3 CorsOne.py -u https://example.com/ -sof -cd evil.com # FIX B1
 ```
 
 ### Example 6: POST Request Scanning
@@ -445,7 +445,7 @@ python3 CorsOne.py -u https://api.example.com/ \
 docker run --rm omranisecurity/corsone:latest \
   -u https://example.com/ \
   -m POST \
-  -d malicious.com \
+  -cd malicious.com \ # FIX B1
   -nc
 
 # Scan from file with Docker (mount volume)
@@ -578,7 +578,7 @@ echo "https://api.target.com/" > targets.txt
 
 **Step 2: Run Scan with Custom Domain**
 ```bash
-python3 CorsOne.py -l targets.txt -d evil.domain.com -o results.txt
+python3 CorsOne.py -l targets.txt -cd evil.domain.com -o results.txt # FIX B1
 ```
 
 **Step 3: Analyze Results**

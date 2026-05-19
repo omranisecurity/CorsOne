@@ -30,7 +30,7 @@ import requests
 import validators
 from colorama import Fore, Style, init
 from requests.adapters import HTTPAdapter
-from urllib3.exceptions import ProtocolError, InsecureRequestWarning
+from urllib3.exceptions import ProtocolError  # FIX B4
 from requests.exceptions import RequestException, Timeout, ConnectionError
 from urllib3.util.retry import Retry
 from threading import Lock
@@ -318,12 +318,12 @@ class CORSVulnerabilityScanner:
             ScanResult object with test outcome
         """
         try:
-            headers = self.session_manager.session.headers.copy()
+            headers = dict(self.session_manager.session.headers)  # FIX B3
             headers['Origin'] = bypass_value
             
             # Add custom headers if provided
             if self.config.custom_headers:
-                headers.update(self.config.custom_headers)
+                headers.update({k: v for k, v in self.config.custom_headers.items()})  # FIX B3
             
             response = self.session_manager.session.request(
                 self.config.method,
@@ -341,7 +341,8 @@ class CORSVulnerabilityScanner:
             
             # Track HTTP status codes
             status_code = response.status_code
-            self.http_status_codes[status_code] = self.http_status_codes.get(status_code, 0) + 1
+            with log_lock:  # FIX B2
+                self.http_status_codes[status_code] = self.http_status_codes.get(status_code, 0) + 1  # FIX B2
             
             result = ScanResult(
                 url=url,
