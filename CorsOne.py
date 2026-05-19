@@ -8,7 +8,7 @@ Usage:
     python3 CorsOne.py -l targets.txt -w 10
     cat domains.txt | python3 CorsOne.py -w 20
 
-Version: 1.0.0
+Version: 1.1.0
 Author: Mohammad Reza Omrani
 License: MIT
 """
@@ -44,6 +44,27 @@ init(autoreset=True)
 # Global locks for thread-safe operations
 output_lock = Lock()
 log_lock = Lock()
+
+logger = logging.getLogger(__name__)  # FIX C1
+
+def _setup_logging(verbose: bool = False, log_file: Optional[str] = None) -> None:  # FIX C1
+    level = logging.DEBUG if verbose else logging.INFO
+    logger.setLevel(level)
+    if logger.handlers:
+        logger.handlers.clear()
+    fmt = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    ch = logging.StreamHandler(sys.stderr)
+    ch.setLevel(level)
+    ch.setFormatter(fmt)
+    logger.addHandler(ch)
+    if log_file:
+        try:
+            fh = logging.FileHandler(log_file)
+            fh.setLevel(logging.DEBUG)
+            fh.setFormatter(fmt)
+            logger.addHandler(fh)
+        except IOError as e:
+            logger.warning(f"Could not create log file: {e}")
 
 
 # ============================================================================
@@ -168,61 +189,7 @@ class CORSBypassPayloads:
         }
 
 
-class LoggerManager:
-    """Centralized logging management."""
-
-    _instance: Optional[LoggerManager] = None
-    
-    def __new__(cls) -> LoggerManager:
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-        return cls._instance
-
-    def __init__(self):
-        """Initialize logger."""
-        if not hasattr(self, '_initialized'):
-            self.logger = logging.getLogger('CorsOne')
-            self._initialized = True
-
-    def setup(self, verbose: bool = False, log_file: Optional[str] = None):
-        """
-        Setup logging configuration.
-        
-        Args:
-            verbose: Enable verbose logging
-            log_file: Optional file to write logs to (only creates if specified)
-        """
-        level = logging.DEBUG if verbose else logging.INFO
-        self.logger.setLevel(level)
-        
-        # Console handler
-        console_handler = logging.StreamHandler(sys.stderr)
-        console_handler.setLevel(level)
-        formatter = logging.Formatter(
-            '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-        )
-        console_handler.setFormatter(formatter)
-        
-        if not self.logger.handlers:
-            self.logger.addHandler(console_handler)
-        
-        # File handler only if log_file is specified
-        if log_file:
-            try:
-                file_handler = logging.FileHandler(log_file)
-                file_handler.setLevel(logging.DEBUG)
-                file_handler.setFormatter(formatter)
-                self.logger.addHandler(file_handler)
-            except IOError as e:
-                self.logger.warning(f"Could not create log file: {e}")
-
-    def get_logger(self) -> logging.Logger:
-        """Get configured logger instance."""
-        return self.logger
-
-
 class CORSVulnerabilityScanner:
-    """Main CORS vulnerability scanner."""
 
     def __init__(self, config: ScanConfig):
         """
@@ -232,8 +199,8 @@ class CORSVulnerabilityScanner:
             config: Scan configuration
         """
         self.config = config
-        self.logger = LoggerManager().get_logger()
-        self.results: List[ScanResult] = []
+        self.logger = logger  # FIX C1
+        self.results: List[ScanResult] = []  # NOTE: do not reuse scanner across URLs  # FIX C2
         self.vulnerable_results: List[ScanResult] = []
         self.error_count: int = 0
         self.http_status_codes: Dict[int, int] = {}
@@ -375,7 +342,7 @@ class CORSVulnerabilityScanner:
 
         return self.results, len(self.vulnerable_results)
 
-    def _print_result(self, result: ScanResult):
+    def _print_result(self, result: ScanResult) -> None:  # FIX C3
         """
         Print result with appropriate formatting.
         
@@ -395,7 +362,7 @@ class CORSVulnerabilityScanner:
                 color = Fore.GREEN if result.is_vulnerable else Fore.RED
                 print(f"{color}{output}{Style.RESET_ALL}")
 
-    def save_results(self):
+    def save_results(self) -> None:  # FIX C3
         """Save results to output file in specified format."""
         if not self.config.output_file:
             return
@@ -436,7 +403,7 @@ class CORSVulnerabilityScanner:
         except IOError as e:
             self.logger.error(f"Failed to save results: {e}")
 
-    def print_summary(self):
+    def print_summary(self) -> None:  # FIX C3
         """Print scan summary."""
         total = len(self.results)
         vulnerable = len(self.vulnerable_results)
@@ -542,7 +509,7 @@ def create_argument_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog='CorsOne',
         description='CORS Misconfiguration Discovery Tool',
-        epilog='Version: 1.0.0 | https://github.com/omranisecurity/CorsOne',
+        epilog='Version: 1.1.0 | https://github.com/omranisecurity/CorsOne',
         formatter_class=argparse.RawDescriptionHelpFormatter
     )
     
@@ -591,7 +558,7 @@ def create_argument_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def print_banner():
+def print_banner() -> None:  # FIX C3
     """Print tool banner."""
     banner_text = """
     ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
@@ -608,19 +575,18 @@ def print_banner():
     print(banner_text)
 
 
-def main():
+def main() -> None:  # FIX C3
     """Main entry point."""
     parser = create_argument_parser()
     args = parser.parse_args()
     
     # Handle version
     if args.version:
-        print("CorsOne v1.0.0")
+        print("CorsOne v1.1.0")
         sys.exit(0)
     
     # Setup logging
-    logger = LoggerManager()
-    logger.setup(verbose=args.verbose, log_file=args.log)
+    _setup_logging(verbose=args.verbose, log_file=args.log)
     
     # Print banner unless silent
     if not args.silent:
@@ -636,7 +602,7 @@ def main():
             with open(args.list, 'r') as f:
                 urls = [line.strip() for line in f if line.strip()]
         except IOError as e:
-            logger.get_logger().error(f"Failed to read URL list: {e}")
+            logger.error(f"Failed to read URL list: {e}")
             sys.exit(1)
     elif not sys.stdin.isatty():
         urls = [line.strip() for line in sys.stdin if line.strip()]
@@ -650,7 +616,7 @@ def main():
         try:
             custom_headers = json.loads(args.custom_headers)
         except json.JSONDecodeError:
-            logger.get_logger().error("Invalid JSON for custom headers")
+            logger.error("Invalid JSON for custom headers")
             sys.exit(1)
     
     # Parse proxy if provided
@@ -662,7 +628,7 @@ def main():
     try:
         custom_domain = DomainValidator.validate(args.custom_domain)
     except ValueError as e:
-        logger.get_logger().error(f"{e}")
+        logger.error(f"{e}")
         sys.exit(1)
 
     validated_urls: List[str] = []
@@ -670,10 +636,10 @@ def main():
         try:
             validated_urls.append(URLValidator.validate(url_input))
         except ValueError as e:
-            logger.get_logger().error(f"{e}")
+            logger.error(f"{e}")
     
     if not validated_urls:
-        logger.get_logger().error("No valid URLs to scan")
+        logger.error("No valid URLs to scan")
         sys.exit(1)
     
     # Create configuration using the first URL as a placeholder
