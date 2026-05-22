@@ -278,8 +278,8 @@ python3 CorsOne.py -u https://example.com/ --no-color
 **Custom Domain for Testing:**
 ```bash
 # Instead of "attacker.com", use your domain
-python3 CorsOne.py -u https://example.com/ -cd attacker.com # FIX B1
-python3 CorsOne.py -u https://example.com/ --custom-domain your-domain.com # FIX B1
+python3 CorsOne.py -u https://example.com/ -cd attacker.com
+python3 CorsOne.py -u https://example.com/ --custom-domain your-domain.com
 ```
 
 **Custom HTTP Method:**
@@ -419,7 +419,7 @@ python3 CorsOne.py -u https://example.com/ -o findings.txt --log activity.log
 ### Example 5: Quick Vulnerability Check
 ```bash
 # Stop after finding first vulnerability
-python3 CorsOne.py -u https://example.com/ -sof -cd evil.com # FIX B1
+python3 CorsOne.py -u https://example.com/ -sof -cd evil.com
 ```
 
 ### Example 6: POST Request Scanning
@@ -462,7 +462,7 @@ python3 CorsOne.py -u https://api.example.com/ \
 docker run --rm omranisecurity/corsone:latest \
   -u https://example.com/ \
   -m POST \
-  -cd malicious.com \ # FIX B1
+  -cd malicious.com \
   -nc
 
 # Scan from file with Docker (mount volume)
@@ -595,7 +595,7 @@ echo "https://api.target.com/" > targets.txt
 
 **Step 2: Run Scan with Custom Domain**
 ```bash
-python3 CorsOne.py -l targets.txt -cd evil.domain.com -o results.txt # FIX B1
+python3 CorsOne.py -l targets.txt -cd evil.domain.com -o results.txt 
 ```
 
 **Step 3: Analyze Results**
