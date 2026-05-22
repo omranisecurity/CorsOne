@@ -362,6 +362,92 @@ class CORSVulnerabilityScanner:
                 color = Fore.GREEN if result.is_vulnerable else Fore.RED
                 print(f"{color}{output}{Style.RESET_ALL}")
 
+    def _generate_sarif_report(self) -> Dict:  # FIX C3
+        """Generate SARIF (Static Analysis Results Interchange Format) report."""
+        sarif_results = []
+        
+        for result in self.results:
+            if self.config.vulnerable_only and not result.is_vulnerable:
+                continue
+            
+            # Determine severity and level
+            if result.is_vulnerable:
+                level = "warning"
+                message = f"CORS misconfiguration detected via {result.bypass_name}"
+            else:
+                level = "note"
+                message = f"No CORS misconfiguration found for {result.bypass_name}"
+            
+            sarif_result = {
+                "ruleId": "cors-bypass",
+                "level": level,
+                "message": {
+                    "text": message
+                },
+                "locations": [
+                    {
+                        "physicalLocation": {
+                            "address": {
+                                "uri": result.url
+                            }
+                        }
+                    }
+                ],
+                "properties": {
+                    "bypass_name": result.bypass_name,
+                    "bypass_value": result.bypass_value,
+                    "response_code": result.response_code,
+                    "access_control_allow_credentials": result.acac,
+                    "access_control_allow_origin": result.acao,
+                    "vulnerability_type": "CORS",
+                    "timestamp": str(result.timestamp)
+                }
+            }
+            
+            if result.error:
+                sarif_result["properties"]["error"] = result.error
+            
+            sarif_results.append(sarif_result)
+        
+        # Build SARIF report structure
+        sarif_report = {
+            "$schema": "https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json",
+            "version": "2.1.0",
+            "runs": [
+                {
+                    "tool": {
+                        "driver": {
+                            "name": "Security Scanner",
+                            "version": "1.1.0",
+                            "informationUri": "https://github.com/omranisecurity/CorsOne",
+                            "rules": [
+                                {
+                                    "id": "cors-bypass",
+                                    "name": "CORS Misconfiguration",
+                                    "shortDescription": {
+                                        "text": "Detection of Cross-Origin Resource Sharing (CORS) configuration vulnerabilities"
+                                    },
+                                    "fullDescription": {
+                                        "text": "Tests for CORS misconfigurations that could allow unauthorized cross-origin requests with credentials"
+                                    },
+                                    "defaultConfiguration": {
+                                        "level": "warning"
+                                    },
+                                    "properties": {
+                                        "category": "Security",
+                                        "tags": ["cors", "security", "misconfiguration"]
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "results": sarif_results
+                }
+            ]
+        }
+        
+        return sarif_report
+
     def save_results(self) -> None:  # FIX C3
         """Save results to output file in specified format."""
         if not self.config.output_file:
@@ -371,13 +457,18 @@ class CORSVulnerabilityScanner:
             output_path = Path(self.config.output_file)
             output_format = self.config.output_format.lower()
 
-            if output_format not in ['json', 'txt']:
-                self.logger.error(f"Unsupported format: {output_format}. Use 'txt' or 'json'.")
+            if output_format not in ['json', 'txt', 'sarif']:
+                self.logger.error(f"Unsupported format: {output_format}. Use 'txt', 'json', or 'sarif'.")
                 return
 
-            final_path = output_path.with_suffix('.json' if output_format == 'json' else '.txt')
+            final_path = output_path.with_suffix('.json' if output_format in ['json', 'sarif'] else '.txt')
 
-            if output_format == 'json':
+            if output_format == 'sarif':
+                sarif_report = self._generate_sarif_report()
+                with open(final_path, 'w') as f:
+                    json.dump(sarif_report, f, indent=2, default=str)
+                self.logger.info(f"Results saved to {final_path}")
+            elif output_format == 'json':
                 results_to_save = [r.to_dict() for r in self.results if not self.config.vulnerable_only or r.is_vulnerable]
                 with open(final_path, 'w') as f:
                     json.dump(
@@ -525,7 +616,7 @@ def create_argument_parser() -> argparse.ArgumentParser:
                        help='Stop after finding first vulnerability')
     parser.add_argument('-cd', '--custom-domain', default='attacker.com',
                        help='Custom domain for payloads (default: attacker.com)')
-    parser.add_argument('-ch', '--custom-headers', help='Custom headers as JSON')
+    parser.add_argument('-H', '--headers', help='Custom headers as JSON (e.g., \'{"Cookie": "session=abc123"}\')')
     parser.add_argument('-p', '--proxy', help='Proxy URL (socks5://host:port)')
     
     # Performance options
@@ -540,8 +631,8 @@ def create_argument_parser() -> argparse.ArgumentParser:
     
     # Output options
     parser.add_argument('-o', '--output', help='Output file for results')
-    parser.add_argument('-f', '--format', choices=['txt', 'json'], default='txt',
-                       help='Output format (txt or json). Default: txt. Explicit --format always takes precedence over output file extension.')
+    parser.add_argument('-f', '--format', choices=['txt', 'json', 'sarif'], default='txt',
+                       help='Output format (txt, json, or sarif). Default: txt. Explicit --format always takes precedence over output file extension.')
     parser.add_argument('--log', help='Log file path. Only creates log file if specified.')
     parser.add_argument('-vo', '--vuln-only', action='store_true',
                        help='Show and save only vulnerable endpoints')
@@ -612,11 +703,11 @@ def main() -> None:  # FIX C3
     
     # Parse custom headers if provided
     custom_headers: Optional[Dict[str, str]] = None
-    if args.custom_headers:
+    if args.headers:
         try:
-            custom_headers = json.loads(args.custom_headers)
+            custom_headers = json.loads(args.headers)
         except json.JSONDecodeError:
-            logger.error("Invalid JSON for custom headers")
+            logger.error("Invalid JSON for headers. Use format: '{\"Header-Name\": \"value\"}'")
             sys.exit(1)
     
     # Parse proxy if provided

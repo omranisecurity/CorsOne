@@ -60,11 +60,12 @@ Unlike generic security scanners, CorsOne:
   - Multiple URLs from file with `-l` flag
   - STDIN piping for easy integration
 - **Customizable Origin Testing** - Test with custom domains instead of default "attacker.com"
+- **Custom Headers Support** - Add authentication cookies and headers for protected endpoints
 - **Flexible HTTP Methods** - Support for GET, POST, PUT, DELETE, etc.
 - **Rate Limiting** - Control request frequency to avoid detection
 - **Proxy Support** - Route requests through HTTP/HTTPS proxies
 - **Stop-on-First Detection** - Exit immediately after finding first vulnerability
-- **File Output** - Save results to file for reporting
+- **Multiple Output Formats** - TXT, JSON, and SARIF for advanced reporting
 
 ### Technical Features
 - **No False Positives** - Checks for both ACAO header and credentials flag
@@ -73,6 +74,7 @@ Unlike generic security scanners, CorsOne:
 - **URL Validation** - Automatically validates and formats URLs
 - **Color-Coded Output** - Green for vulnerable, red for not vulnerable
 - **Error Handling** - Graceful handling of network errors and timeouts
+- **SARIF Export** - Standards-compliant security reporting format
 - **Keyboard Interrupt Support** - Safely cancel operations with Ctrl+C
 
 ### Bypass Techniques Tested
@@ -239,11 +241,16 @@ python3 CorsOne.py -u https://example.com/ --output findings.txt
 python3 CorsOne.py -u https://example.com/ -o results.json -f json -vo
 ```
 
-**Specify Output Format (TXT or JSON):**
+**Specify Output Format (TXT, JSON, or SARIF):**
 ```bash
-# Specify format explicitly
+# TXT format (default)
+python3 CorsOne.py -u https://example.com/ -o results.txt
+
+# JSON format for parsing
 python3 CorsOne.py -u https://example.com/ -o results -f json
-python3 CorsOne.py -u https://example.com/ -o results --format txt
+
+# SARIF format for advanced reporting
+python3 CorsOne.py -u https://example.com/ -o results -f sarif
 
 # Explicit format takes precedence over file extension
 python3 CorsOne.py -u https://example.com/ -o results.json  # → results.json
@@ -255,27 +262,9 @@ python3 CorsOne.py -u https://example.com/ -o results.txt   # → results.json w
 # Only creates log file if specified (no extra files otherwise)
 python3 CorsOne.py -u https://example.com/ --log scan.log
 python3 CorsOne.py -u https://example.com/ --log debug_info.log -v
-```
 
-**Specify Output Format (TXT or JSON):**
-```bash
-# Specify format explicitly
-python3 CorsOne.py -u https://example.com/ -o results -f json
-python3 CorsOne.py -u https://example.com/ -o results --format txt
-
-# Explicit format takes precedence over file extension
-python3 CorsOne.py -u https://example.com/ -o results.json  # → results.json
-python3 CorsOne.py -u https://example.com/ -o results.txt   # → results.json when --format json is set
-```
-
-**Save Debug Logs (Only When Specified):**
-```bash
-# Only creates log file if specified - no extra files otherwise
-python3 CorsOne.py -u https://example.com/ --log scan.log
-python3 CorsOne.py -u https://example.com/ --log debug_info.log -v
-
-# Combined with results output
-python3 CorsOne.py -u https://example.com/ -o results.txt --log debug.log
+# Combined with results output and SARIF format
+python3 CorsOne.py -u https://example.com/ -o results -f sarif --log debug.log
 ```
 
 **Disable Color Output:**
@@ -337,7 +326,8 @@ python3 CorsOne.py -u https://example.com/ --headers "Cookie: session=abc123"
 | URL | `-u` | string | Target URL to scan | - | `-u https://example.com/` |
 | List | `-l` | file | File containing URLs | - | `-l targets.txt` |
 | Output | `-o` | file | Save results to file | - | `-o results.txt` |
-| Format | `-f` | choice | Output format (txt/json) | txt | `-f json` |
+| Format | `-f` | choice | Output format (txt/json/sarif) | txt | `-f sarif` |
+| Headers | `-H` | string | Custom headers as JSON | - | `-H '{"Cookie": "session=abc123"}' |
 | Log | `--log` | file | Save debug logs to file | - | `--log scan.log` |
 | Vulnerable Only | `-vo`, `--vuln-only` | flag | Show and save only vulnerable endpoints | false | `-vo` |
 | No Color | `-nc` | flag | Disable colored output | false | `-nc` |
@@ -397,6 +387,22 @@ python3 CorsOne.py -u https://example.com/ -o results -f json
 jq '.[] | select(.is_vulnerable==true)' results.json
 ```
 
+### Example 3.5: SARIF Output for Advanced Reporting
+
+```bash
+# Generate SARIF report
+python3 CorsOne.py -u https://example.com/ -o scan_results -f sarif
+
+# With authentication headers
+python3 CorsOne.py -u https://api.example.com/ \
+  -H '{"Cookie": "session=abc123"}' \
+  -f sarif \
+  -o results.json
+
+# Only vulnerable findings in SARIF format
+python3 CorsOne.py -u https://example.com/ -f sarif -o results -vo
+```
+
 ### Example 4: Debug Logging
 
 ```bash
@@ -438,11 +444,16 @@ cat urls.txt | python3 CorsOne.py -o cors_findings.txt
 
 ```
 
-### Example 9: Custom Headers
+### Example 9: Custom Headers (JSON Format)
 ```bash
-# Test endpoints requiring authentication
+# Test endpoints requiring authentication with cookie
 python3 CorsOne.py -u https://api.example.com/ \
-  -H "Cookie: sessionid=abc123"
+  -H '{"Cookie": "sessionid=abc123"}'
+
+# Multiple custom headers
+python3 CorsOne.py -u https://api.example.com/ \
+  -H '{"Cookie": "session=abc123", "User-Agent": "Custom Agent"}'
+
 ```
 
 ### Example 10: Using Docker with Options
@@ -607,16 +618,25 @@ python3 CorsOne.py -l targets.txt -cd evil.domain.com -o results.txt # FIX B1
 SESSION_COOKIE="sessionid=abc123def456xyz"
 ```
 
-**Step 2: Scan with Cookie Header**
+**Step 2: Scan with Cookie Header (JSON Format)**
 ```bash
+# Pass headers as JSON string
 python3 CorsOne.py -u https://api.example.com/ \
-  -H "Cookie: sessionid=abc123def456xyz"
+  -H '{"Cookie": "sessionid=abc123def456xyz"}'
+
+# Multiple headers
+python3 CorsOne.py -u https://api.example.com/ \
+  -H '{"Cookie": "sessionid=abc123def456xyz", "User-Agent": "Custom"}'
 ```
 
 **Step 3: Analyze Results**
 ```bash
 # The scan will use your authenticated session with the cookie
 # This helps find CORS issues in protected endpoints
+# Save results with SARIF format
+python3 CorsOne.py -u https://api.example.com/ \
+  -H '{"Cookie": "sessionid=abc123def456xyz"}' \
+  -f sarif -o auth_scan_results.json
 ```
 
 ---
@@ -695,6 +715,44 @@ python3 CorsOne.py -u https://api.example.com/users/123 -m DELETE
 # OPTIONS method (often reveals CORS configuration)
 python3 CorsOne.py -u https://api.example.com/users -m OPTIONS
 ```
+---
+
+### Tutorial 8: SARIF Output for Advanced Reporting
+
+**Scenario:** You want to export CORS scan results in SARIF format for advanced analysis and integration
+
+**Step 1: Understand SARIF Format**
+SARIF (Static Analysis Results Interchange Format) is an industry-standard format for security findings that enables integration with various security tools and platforms.
+
+**Step 2: Generate SARIF Report**
+```bash
+# Basic SARIF output
+python3 CorsOne.py -u https://example.com/ -f sarif -o scan_results
+
+# With authentication headers
+python3 CorsOne.py -u https://api.example.com/ \
+  -H '{"Cookie": "session=abc123"}' \
+  -f sarif \
+  -o api_scan_results
+
+# Only vulnerable findings
+python3 CorsOne.py -u https://example.com/ -f sarif -o results -vo
+```
+
+**Step 3: Analyze Results**
+```bash
+# View SARIF results with jq
+jq '.runs[0].results[] | select(.level=="warning")' scan_results.json
+
+# Count vulnerable findings
+jq '[.runs[0].results[] | select(.level=="warning")] | length' scan_results.json
+
+# Extract all vulnerability details
+jq '.runs[0].results[] | {rule: .ruleId, level: .level, message: .message.text}' scan_results.json
+```
+
+**Step 4: Integration**
+SARIF files can be imported into security platforms and tools for centralized vulnerability management and reporting. The generated SARIF file contains all necessary metadata including vulnerability severity, location, and detailed properties for comprehensive security analysis.
 ---
 
 ## 📊 Output Explanation
