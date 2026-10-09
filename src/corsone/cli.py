@@ -137,7 +137,15 @@ def _read_target_urls(args: argparse.Namespace, parser: argparse.ArgumentParser)
 
 def _write_output(payload: str, path: str | None) -> None:
     if path:
-        Path(path).write_text(payload, encoding="utf-8")
+        output_root = Path.cwd().resolve()
+        output_path = (output_root / path).resolve()
+        try:
+            output_path.relative_to(output_root)
+        except ValueError as exc:
+            raise ValueError(
+                "Output path must refer to a file inside the current working directory."
+            ) from exc
+        output_path.write_text(payload, encoding="utf-8")
         return
     print(payload)
 
@@ -181,7 +189,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     else:
         payload = render_sarif_report(results, vulnerable_only=config.vulnerable_only)
 
-    _write_output(payload, config.output_file)
+    try:
+        _write_output(payload, config.output_file)
+    except (OSError, ValueError) as exc:
+        parser.error(f"Failed to write output: {exc}")
     return 0
 
 
