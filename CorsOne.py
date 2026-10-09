@@ -116,6 +116,7 @@ class ScanConfig:
     proxy: Optional[Dict[str, str]] = None
     verbose: bool = False
     vulnerable_only: bool = False
+    verify_ssl: bool = True
 
 
 class CORSBypassPayloads:
@@ -267,10 +268,17 @@ class CORSVulnerabilityScanner:
             await asyncio.sleep(self.config.rate_limit)  # PERF 1
         return result
 
+    def _reset_results(self) -> None:
+        """Reset per-scan state so repeated scans on the same instance are isolated."""
+        self.results = []
+        self.vulnerable_results = []
+        self.error_count = 0
+        self.http_status_codes = {}
+
     @asynccontextmanager
     async def _make_session(self):  # PERF 3
         connector = TCPConnector(
-            ssl=False,
+            ssl=self.config.verify_ssl,
             use_dns_cache=True,
             ttl_dns_cache=300,
             limit=self.config.max_workers * 2,
@@ -297,9 +305,11 @@ class CORSVulnerabilityScanner:
         return self.config.proxy.get("https") or self.config.proxy.get("http")
 
     def scan(self, urls: Optional[List[str]] = None) -> Tuple[List[ScanResult], int]:  # PERF 1
+        self._reset_results()
         return asyncio.run(self._async_scan(urls or [self.config.url]))
 
     async def _async_scan(self, urls: List[str]) -> Tuple[List[ScanResult], int]:  # PERF 1
+        self._reset_results()
         if self.config.verbose:
             self.logger.info(f"Using {self.config.max_workers} workers")
 
@@ -461,7 +471,7 @@ class CORSVulnerabilityScanner:
                 self.logger.error(f"Unsupported format: {output_format}. Use 'txt', 'json', or 'sarif'.")
                 return
 
-            final_path = output_path.with_suffix('.json' if output_format in ['json', 'sarif'] else '.txt')
+            final_path = output_path
 
             if output_format == 'sarif':
                 sarif_report = self._generate_sarif_report()
@@ -618,6 +628,8 @@ def create_argument_parser() -> argparse.ArgumentParser:
                        help='Custom domain for payloads (default: attacker.com)')
     parser.add_argument('-H', '--headers', help='Custom headers as JSON (e.g., \'{"Cookie": "session=abc123"}\')')
     parser.add_argument('-p', '--proxy', help='Proxy URL (socks5://host:port)')
+    parser.add_argument('--insecure', action='store_true',
+                       help='Disable TLS certificate verification (unsafe; only for testing self-signed endpoints)')
     
     # Performance options
     parser.add_argument('-w', '--workers', type=int, default=5,
@@ -750,7 +762,8 @@ def main() -> None:  # FIX C3
         custom_headers=custom_headers,
         proxy=proxy,
         verbose=args.verbose,
-        vulnerable_only=args.vuln_only
+        vulnerable_only=args.vuln_only,
+        verify_ssl=not args.insecure,
     )
     
     # Run scanner once for all URLs with a shared session
