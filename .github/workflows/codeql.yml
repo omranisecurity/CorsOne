@@ -22,6 +22,9 @@ on:
 jobs:
   analyze:
     name: Analyze (${{ matrix.language }})
+    # Default CodeQL setup blocks uploads from advanced workflows. Set this
+    # repository variable only after disabling CodeQL default setup.
+    if: vars.CODEQL_ADVANCED_SETUP == 'true'
     # Runner size impacts CodeQL analysis time. To learn more, please see:
     #   - https://gh.io/recommended-hardware-resources-for-running-codeql
     #   - https://gh.io/supported-runners-and-hardware-resources
