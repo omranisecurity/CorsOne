@@ -34,7 +34,7 @@ For development, install the test and quality tools as well:
 python -m pip install -e ".[dev]"
 ```
 
-See the [CorsOne Wiki](wiki.md) for alternative shell commands, full installation details, and the complete CLI reference.
+See the [CorsOne Wiki](https://github.com/omranisecurity/CorsOne/wiki) for alternative shell commands, full installation details, and the complete CLI reference.
 
 ## Quick start
 
@@ -68,11 +68,11 @@ corsone --url https://app.example.test/api \
   --format json --output report.json --silent
 ```
 
-The `app.example.test` hostname is an example placeholder; use only an authorized target. More examples and option details are in the [Wiki](wiki.md).
+The `app.example.test` hostname is an example placeholder; use only an authorized target. More examples and option details are in the [Wiki](https://github.com/omranisecurity/CorsOne/wiki).
 
 ## Documentation
 
-The [CorsOne Wiki](wiki.md) covers installation, usage, all CLI options, scan behavior, result interpretation, output formats, troubleshooting, and development.
+The [CorsOne Wiki](https://github.com/omranisecurity/CorsOne/wiki) covers installation, usage, all CLI options, scan behavior, result interpretation, output formats, troubleshooting, and development.
 
 ## Security and responsible use
 
