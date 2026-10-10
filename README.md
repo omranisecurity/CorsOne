@@ -41,7 +41,7 @@ See the [CorsOne Wiki](https://github.com/omranisecurity/CorsOne/wiki) for alter
 Start a local web application you control, then scan one of its endpoints:
 
 ```console
-corsone --url http://127.0.0.1:8000/ --silent
+corsone --url https://target.com/ --silent
 ```
 
 Replace the URL with an endpoint you own or are explicitly authorized to assess. CorsOne prints one `SAFE` or `VULNERABLE` line per test value. A `VULNERABLE` label is a candidate signal and requires manual validation.
